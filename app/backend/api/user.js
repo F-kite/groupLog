@@ -1,5 +1,5 @@
-import supabase from "../supabase";
-import serializeUser from "../utils/serializeUser";
+import supabase from "../supabase/index.js";
+import serializeUser from "../utils/serializeUser.js";
 
 // метод для получения данных пользователя из базы при наличии аутентифицированного пользователя
 // объект, возвращаемый методом `auth.user`, извлекается из локального хранилища
@@ -24,7 +24,7 @@ const get = async () => {
 
 // метод для регистрации пользователя
 const register = async (data) => {
-  const { email, password, user_name } = data;
+  const { email, password, name, age } = data;
   try {
     // регистрируем пользователя
     const { user, error } = await supabase.auth.signUp(
@@ -32,11 +32,11 @@ const register = async (data) => {
       {
         email,
         password,
+        name,
       },
-      // дополнительные/опциональные данные
       {
         data: {
-          user_name,
+          age,
         },
       }
     );
@@ -105,9 +105,7 @@ const update = async (data) => {
 // метод для сохранения аватара пользователя
 
 // адрес хранилища
-const STORAGE_URL = `${
-  import.meta.env.VITE_SUPABASE_URL
-}/storage/v1/object/public/`;
+const STORAGE_URL = `${process.env.PUBLIC_SUPABASE_UR}/storage/v1/object/public/`;
 
 //принимает аватар пользователя
 const uploadAvatar = async (file) => {

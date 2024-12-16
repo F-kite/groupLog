@@ -6,6 +6,7 @@ export async function getParsedSchedule(week, group) {
     const schedule = await parseSchedule(week, group);
     return formatSchedule(schedule, week, group);
   } catch (error) {
-    throw new Error(`Failed to get parsed schedule: ${error.message}`);
+    console.error(`Failed to get parsed schedule: ${error.message}`);
+    throw new Error(`Failed to get parsed schedule`);
   }
 }

@@ -1,10 +1,12 @@
 const serializeUser = (user) =>
-    user
-        ? {
-            id: user.id, //может быть user.user_id 
-            email: user.email,
-            ...user.user_metadata
-        }
-        : null
+  user
+    ? {
+        user_id: user.id,
+        user_name: user.name,
+        user_email: user.email,
+        user_password: user.password,
+        ...user.user_metadata,
+      }
+    : null;
 
-export default serializeUser
+export default serializeUser;
