@@ -8,6 +8,7 @@ import teacherApi from "./api/teachers.js";
 import groupApi from "./api/groups.js";
 import subjectsApi from "./api/subjects.js";
 import studentsApi from "./api/students.js";
+import scheduleApi from "./api/schedules.js";
 
 import {
   groupSchemaToCreate,
@@ -60,7 +61,8 @@ post - создание со статусом 201 после успешного 
 put - обновление записи
 */
 
-app.get("/api/parser/:group/:week", scheduleRoutes);
+app.get("/api/parser/:group/:week", scheduleApi.getSchedule);
+app.post("/api/parser/:group/:week", scheduleApi.createSchedule);
 
 app.get("/admin/:name", userApi.getByName);
 app.delete("/admin/remove", validate(userDeleteSchema), userApi.remove);

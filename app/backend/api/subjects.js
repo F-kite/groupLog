@@ -43,8 +43,7 @@ const create = async (req, res) => {
     .from("subjects")
     .select("*")
     .eq("subject_type", subject_type)
-    .eq("subject_name", subject_name)
-    .eq("room", room);
+    .eq("subject_name", subject_name);
 
   if (subject.length !== 0) {
     return res.status(400).json({ error: "Subject already exists" });
@@ -66,7 +65,7 @@ const create = async (req, res) => {
 // Обновить данные предмета
 const update = async (req, res) => {
   const { id } = req.params;
-  const { subject_type, subject_name, room } = req.body;
+  const { subject_type, subject_name } = req.body;
 
   //Существует ли данный предмет
   const { data: subject, error: subjectError } = await supabase
@@ -88,7 +87,6 @@ const update = async (req, res) => {
     updateData.subject_type = subject_type;
   if (subject_name !== undefined || subject_name !== subject.subject_name)
     updateData.subject_name = subject_name;
-  if (room !== undefined || room !== subject.room) updateData.room = room;
 
   // Если нет данных для обновления
   if (Object.keys(updateData).length === 0) {

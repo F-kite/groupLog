@@ -2,6 +2,9 @@ import Joi from "joi";
 
 export const studentSchemaToCreate = Joi.object({
   group_id: Joi.number().integer().required(),
+  subgroup: Joi.number().integer().optional().valid(1, 2).messages({
+    "string.valid": "Значение подгруппы может быть в диапозоне 1-2",
+  }),
   student_name: Joi.string()
     .min(2)
     .max(30)
@@ -57,6 +60,9 @@ export const studentSchemaToCreate = Joi.object({
 
 export const studentSchemaToUpdate = Joi.object({
   group_id: Joi.number().integer().optional(),
+  subgroup: Joi.number().integer().optional().valid(1, 2).messages({
+    "string.valid": "Значение подгруппы может быть в диапозоне 1-2",
+  }),
   student_name: Joi.string()
     .min(2)
     .max(30)

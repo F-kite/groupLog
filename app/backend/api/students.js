@@ -5,6 +5,7 @@ const getAll = async (req, res) => {
   const { data: students, error } = await supabase.from("students").select(`
     student_id,
     groups (group_name),
+    subgroup,
     student_name,
     student_surname,
     student_patronymic,
@@ -35,6 +36,7 @@ const getById = async (req, res) => {
       `
     student_id,
     groups (group_name),
+    subgroup,
     student_name,
     student_surname,
     student_patronymic,
