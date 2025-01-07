@@ -1,17 +1,18 @@
 import supabase from "../supabase/index.js";
+import { emailSchema, usernameSchema } from "../schemas/userSchema.js";
 
 // метод для получения данных пользователя из базы при наличии аутентифицированного пользователя
 // объект, возвращаемый методом `auth.user`, извлекается из локального хранилища
-const getByName = async (req, res) => {
-  // const user = supabase.auth.user();
-  const { name } = req.params;
-  const user = true;
+const getByEmail = async (req, res) => {
+  const user = supabase.auth.user();
+  console.debug(user);
+  const { email } = req.params;
   if (user) {
     try {
       const { data, error } = await supabase
         .from("users")
         .select("*")
-        .eq("user_name", name)
+        .eq("user_email", email)
         .single();
 
       if (error) {
@@ -31,7 +32,7 @@ const getByName = async (req, res) => {
 const registration = async (req, res) => {
   const { name, email, password, additionalData = {} } = req.body;
   try {
-    //Существует ли уже пользователь с такой почтой
+    //Существует ли пользователь с такой почтой
     const { data: userEmail } = await supabase
       .from("users")
       .select("*")
@@ -41,7 +42,7 @@ const registration = async (req, res) => {
     if (userEmail) {
       return res
         .status(400)
-        .json({ error: "Invalid email. User with this email already exists." });
+        .json({ error: "Пользователь с такой почтой уже существует" });
     }
     //Существует ли пользователь с таким именем
     const { data: userName } = await supabase
@@ -53,7 +54,7 @@ const registration = async (req, res) => {
     if (userName) {
       return res
         .status(400)
-        .json({ error: "Invalid name. User with that name already exists." });
+        .json({ error: "Пользователь с таким именем уже существует" });
     }
 
     const { error } = await supabase.auth.signUp({
@@ -62,17 +63,14 @@ const registration = async (req, res) => {
     });
 
     if (error) {
-      console.error(error);
-      return res.status(500).json({ error: "Failed to register user" });
+      return res.status(500).json({ error: "Ошибка при регистрации" });
     }
 
-    const user_age = additionalData.age || null;
     const user_avatar_url = additionalData.avatar || null;
 
     const profileData = {
       user_name: name,
       user_email: email,
-      user_age,
       user_avatar_url,
     };
 
@@ -85,29 +83,77 @@ const registration = async (req, res) => {
     }
 
     console.debug(`User ${name} : ${email} was registered`);
-    return res.status(200).json({ message: "User is registered" });
+    return res.status(200).json({
+      message:
+        "Подтвердите вашу почту в письме, отправленного на указанный почтовый адрес",
+    });
   } catch (error) {
-    console.error(error);
     return res
       .status(500)
-      .json({ error: error.message || "Failed to register user" });
+      .json({ error: error.message || "Ошибка при регистрации" });
   }
 };
 
 // Авторизация пользователя
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { userLogin, password } = req.body;
   try {
-    let { error } = await supabase.auth.signInWithPassword({
+    let email;
+    const isEmail = emailSchema.validate(userLogin).error === undefined;
+    const isUsername = usernameSchema.validate(userLogin).error === undefined;
+    if (isEmail) {
+      email = userLogin;
+    } else if (isUsername) {
+      const { data: userEmail, error: userError } = await supabase
+        .from("users")
+        .select("user_email")
+        .eq("user_name", userLogin)
+        .limit(1)
+        .single();
+
+      if (userError) {
+        console.error(userError);
+        console.log("userEmail:", userEmail);
+        return res.status(400).json({ error: "Ошибка получения почты" });
+      }
+
+      if (!userEmail) {
+        return res
+          .status(400)
+          .json({ error: "Пользователя с таким логином не существует" });
+      }
+      email = userEmail.user_email;
+    }
+
+    let { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
     });
 
     if (error) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      console.error(error.message);
+      return res.status(400).json({ error: "Неверный логин или пароль" });
     }
 
-    return res.status(200).json("User is logined");
+    console.debug(`User ${email} logged in`);
+
+    // сохранение токена авторизации в куки
+    res.cookie("authToken", data.session.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 час
+    });
+
+    // сохранение токена обновления авторизации в куки
+    res.cookie("refreshToken", data.session.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
+    });
+
+    return res.status(200).json({ message: "Успешно" });
   } catch (error) {
     console.error(error);
     return res
@@ -225,7 +271,7 @@ const uploadAvatar = async (file) => {
 };
 
 const userApi = {
-  getByName,
+  getByEmail,
   registration,
   login,
   logout,

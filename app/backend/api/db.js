@@ -72,5 +72,31 @@ async function fetchAllData() {
   }
 }
 
-const dbApi = { fetchAllData };
+const refreshAuthToken = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: "No refresh token provided" });
+  }
+
+  const { data, error } = await supabase.auth.refreshSession({
+    refresh_token: refreshToken,
+  });
+
+  if (error) {
+    return res.status(401).json({ message: "Failed to refresh token" });
+  }
+
+  // Обновляем токен
+  res.cookie("authToken", data.session.access_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 1000, // 1 час
+  });
+
+  res.status(200).json({ message: "Token refreshed successfully" });
+};
+
+const dbApi = { fetchAllData, refreshAuthToken };
 export default dbApi;

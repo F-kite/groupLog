@@ -1,8 +1,10 @@
 import express from "express";
-import scheduleRoutes from "./api/scheduleRoutes.js";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 
-import { validate } from "./middleware.js";
+import { validate, authMiddleware } from "./middleware.js";
 
+import dbApi from "./api/db.js";
 import userApi from "./api/user.js";
 import teacherApi from "./api/teachers.js";
 import groupApi from "./api/groups.js";
@@ -34,14 +36,29 @@ import {
   subjectSchemaToUpdate,
 } from "./schemas/subjectSchema.js";
 
-import testingFunction from "../../tempFile.js";
-
-const PORT = process.env.PORT || 3001;
-
 const app = express();
-app.use(express.json());
-
+const PORT = process.env.PORT || 3001;
 let serverReady = false;
+
+app.use(express.json());
+app.use(cookieParser());
+
+// CORS
+// app.use(function (req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   next();
+// });
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 app.listen(PORT, (error) => {
   error
@@ -49,12 +66,20 @@ app.listen(PORT, (error) => {
     : (console.log(`listening port ${PORT}`), (serverReady = true));
 });
 
-app.get("/health", (req, res) => {
+app.get("/ping", (req, res) => {
   if (serverReady) {
-    console.log(testingFunction());
     res.status(200).json({ message: "Server worked" });
   }
 });
+
+app.get("/dashboard", authMiddleware, (req, res) => {
+  res.json({
+    message: "Вы авторизованы",
+    user: req.user,
+  });
+});
+
+app.post("/api/refresh-token", dbApi.refreshAuthToken);
 
 /*
 post - создание со статусом 201 после успешного выполнения
@@ -64,12 +89,12 @@ put - обновление записи
 app.get("/api/parser/:group/:week", scheduleApi.getSchedule);
 app.post("/api/parser/:group/:week", scheduleApi.createSchedule);
 
-app.get("/admin/:name", userApi.getByName);
-app.delete("/admin/remove", validate(userDeleteSchema), userApi.remove);
+app.get("api/admin/user", userApi.getByEmail);
+app.delete("api/admin/user", validate(userDeleteSchema), userApi.remove);
 
 app.post(
   "/api/users/registration",
-  validate(userRegisterSchema), //проверить работоспособность, еще раз
+  validate(userRegisterSchema),
   userApi.registration
 );
 app.post("/api/users/login", validate(userLoginSchema), userApi.login);
