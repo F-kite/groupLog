@@ -61,7 +61,7 @@ function parseLessonData(lessonData) {
   let room = [];
 
   // Определяем тип и предмет
-  const lessonTypes = ["л.", "пр.", "уч.пр.", "лаб."];
+  const lessonTypes = ["л.", "пр.", "уч.пр.", "лаб.", "конс.", "экз."];
   typeAndSubject.map((el) => {
     for (const lessonType of lessonTypes) {
       if (el?.startsWith(lessonType)) {
