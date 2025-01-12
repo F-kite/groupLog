@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-
-import { getProtectedRouteData } from "@/utils/api";
+import { PuffLoader } from "react-spinners";
+import { getProtectedRouteData } from "@/utils/api/index";
 
 export default function ProtectedRoute({
   children,
@@ -15,6 +15,7 @@ export default function ProtectedRoute({
     const checkAuth = async () => {
       try {
         await getProtectedRouteData().then(async (res) => {
+          console.debug(res);
           if ("error" in res) {
             throw new Error(`ProtectedRoute error: ${res.error}`);
           } else if ("message" in res) {
@@ -34,8 +35,15 @@ export default function ProtectedRoute({
 
   if (loading) {
     return (
-      <div>
-        Загрузка страницы.. <br /> *проверка через middleware
+      <div className="loader-container">
+        <PuffLoader
+          loading
+          size={200}
+          cssOverride={{
+            display: "block",
+            margin: "0 auto",
+          }}
+        />
       </div>
     );
   }

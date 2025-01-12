@@ -17,8 +17,13 @@ export const validate = (schema) => (req, res, next) => {
 
 export const authMiddleware = async (req, res, next) => {
   const token = req.cookies.authToken;
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized: No token" });
+
+  // if (!token) {
+  //   return res.status(401).json({ message: "Unauthorized: No token" });
+  // }
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined in .env file.");
   }
   try {
     const decoded = jwt.verify(token, JWT_SECRET);

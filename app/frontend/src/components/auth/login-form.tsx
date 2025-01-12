@@ -64,10 +64,10 @@ export default function LoginForm({
     checkServer().then((res) => console.log(res));
   }, []);
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 ", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-3xl">Авторизация</CardTitle>
+          <CardTitle className="text-3xl Tilda-sans-md">Авторизация</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>

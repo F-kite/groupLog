@@ -1,7 +1,14 @@
+import Header from "@/components/Header/Header";
+import HomePage from "@/components/HomePage/HomePage";
+import styles from "./styles.module.scss";
+
 export default function MainPage() {
   return (
-    <div>
-      <h1>Welcome to groupLog</h1>
+    <div className={styles.layout}>
+      <Header />
+      <main className={styles.body}>
+        <HomePage />
+      </main>
     </div>
   );
 }

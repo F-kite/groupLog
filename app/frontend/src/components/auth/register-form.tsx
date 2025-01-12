@@ -12,6 +12,8 @@ import FormSuccess from "./FormSuccess";
 import userApi from "../../utils/api/users";
 import { checkServer } from "../../utils/api/index";
 
+import styles from "./styles.module.scss";
+
 async function Registration(values: z.infer<typeof RegisterSchema>) {
   const validatedFields = RegisterSchema.safeParse(values);
   if (!validatedFields.success) {
@@ -67,13 +69,15 @@ export function RegisterForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-3xl">Регистрация</CardTitle>
+          <CardTitle className={`text-3xl Tilda-sans-md }`}>
+            Регистрация
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="name">Логин</Label>
+                <Label htmlFor="name ">Логин</Label>
                 <Input
                   id="name"
                   type="text"
@@ -146,7 +150,12 @@ export function RegisterForm({
               </div>
               <FormError message={error} />
               <FormSuccess message={success} />
-              <Button type="submit" variant="auth" size="lg" className="w-full">
+              <Button
+                type="submit"
+                variant="auth"
+                size="lg"
+                className="w-full "
+              >
                 Зарегистрироваться
               </Button>
               <Button variant="outline" size="lg" className="w-full">

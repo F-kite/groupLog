@@ -1,0 +1,10 @@
+.layout {
+  display: flex;
+  flex-direction: column; /* Располагаем элементы по вертикали */
+  height: 100vh; /* или любая другая фиксированная высота */
+}
+.body {
+  background-color: rgb(244, 244, 244);
+  flex-grow: 1;
+  border-radius: 10px;
+}

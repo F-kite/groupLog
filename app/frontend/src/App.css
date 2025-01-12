@@ -1,0 +1,23 @@
+@font-face {
+  font-family: "Tilda-sans-md";
+  src: url("../fonts/tilda-sans_medium.ttf");
+}
+@font-face {
+  font-family: "Tilda-sans-rg";
+  src: url("../fonts/tilda-sans_regular.ttf");
+}
+
+.loader-container {
+  height: 100vh;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.Tilda-sans-md {
+  font-family: "Tilda-sans-md";
+}
+
+.Tilda-sans-rg {
+  font-family: "Tilda-sans-rg";
+}

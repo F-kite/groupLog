@@ -1,5 +1,9 @@
 import formatDate from "./formatDate.js";
 
+function addSpaceBefore(match) {
+  return " " + match;
+}
+
 function prepareScheduleSkeleton(schedule, weekNumber, groupName) {
   const days = [
     "Monday",
@@ -61,16 +65,35 @@ function parseLessonData(lessonData) {
   let room = [];
 
   // Определяем тип и предмет
-  const lessonTypes = ["л.", "пр.", "уч.пр.", "лаб.", "конс.", "экз."];
+  const lessonTypes = [
+    "л.",
+    "пр.",
+    "уч.пр.",
+    "лаб.",
+    "конс.",
+    "экз.",
+    "КП",
+    "уч. пр. ",
+  ];
+  let flag = false;
+  const regex = /- 1 п\/г|- 2 п\/г/;
   typeAndSubject.map((el) => {
-    for (const lessonType of lessonTypes) {
+    for (let lessonType of lessonTypes) {
       if (el?.startsWith(lessonType)) {
-        type = lessonType.replace(/\./g, ""); // Убираем точку
+        if (lessonType == "уч. пр. ") {
+          type = lessonType.replace(/\./g, "").replaceAll(" ", "");
+        } else {
+          type = lessonType.replace(/\./g, ""); // Убираем точку
+        }
+
+        if (regex.test(el)) {
+          el = el.replace(/- 1 п\/г|- 2 п\/г/, addSpaceBefore);
+        }
+
         subject.push(el?.substring(lessonType.length).trim() || "unknown");
         break;
       }
     }
-
     if (typeAndSubject.length == 2 && !subject[0].includes(el.substring(4))) {
       subject.push(el?.trim() || "unknown");
     }

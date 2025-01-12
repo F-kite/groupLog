@@ -86,7 +86,8 @@ post - создание со статусом 201 после успешного 
 put - обновление записи
 */
 
-app.get("/api/parser/:group/:week", scheduleApi.getSchedule);
+app.get("/api/parser/:group/:week", scheduleApi.getWeeklySchedule);
+app.get("/api/parser/:group/:week/:day", scheduleApi.getDailySchedule);
 app.post("/api/parser/:group/:week", scheduleApi.createSchedule);
 
 app.get("api/admin/user", userApi.getByEmail);
