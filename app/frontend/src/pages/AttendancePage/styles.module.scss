@@ -1,0 +1,16 @@
+.container {
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+.studentCheckbox {
+  margin-right: 0.5rem;
+}
+
+.studentCell {
+  display: flex;
+}
+
+.placeholderRow {
+  height: 52px; /* Фиксированная высота */
+}

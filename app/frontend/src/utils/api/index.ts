@@ -19,10 +19,10 @@ export async function checkServer() {
 export async function getProtectedRouteData() {
   try {
     const response = await axios.get(`${API_URL}/dashboard`);
-    return { message: response };
+    return { message: response.data };
   } catch (error) {
     if (error instanceof Error) {
-      return { error: error.message };
+      return { error: error };
     }
     return { error: "Неизвестная ошибка" };
   }

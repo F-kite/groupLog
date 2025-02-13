@@ -1,0 +1,38 @@
+.layout {
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: repeat(3, auto);
+  grid-template-areas:
+    "header"
+    "body"
+    "footer";
+  gap: 1rem;
+}
+
+header {
+  grid-column: header;
+  background-image: url("/image/main_bg_photo.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: 10px;
+  padding: 1.75rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+main {
+  grid-column: body;
+  background-color: rgb(240, 240, 240); //rgba(86, 86, 86, 0.116)
+  flex-grow: 1;
+  border-radius: 10px;
+  padding: 4rem 0;
+}
+
+footer {
+  grid-column: footer;
+  background-color: rgba(86, 86, 86, 0.658);
+  border-radius: 10px;
+  padding: 1.75rem 0;
+  display: flex;
+  justify-content: center;
+}

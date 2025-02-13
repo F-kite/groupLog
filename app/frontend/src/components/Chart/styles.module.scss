@@ -1,0 +1,75 @@
+.container {
+  height: 100%;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 1rem;
+  align-content: center;
+}
+
+.title {
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.periodButtons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.3rem;
+  text-align: center;
+}
+
+.chartContainer {
+  height: 80%;
+
+  //   @media (min-width: 640px) {
+  //     height: 400px;
+  //   }
+
+  //   @media (min-width: 768px) {
+  //     height: 500px;
+  //   }
+
+  :global(.recharts-bar-rectangle) path {
+    fill: rgb(86, 86, 86);
+    transition: opacity 0.3s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  :global(.recharts-layer) {
+    background-color: #000;
+  }
+
+  //   :global(.recharts-tooltip-cursor) {
+  //     fill: transparent;
+  //   }
+}
+
+.tooltip {
+  background-color: white;
+  border: 1px solid #ddd;
+  padding: 0.6rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tooltipContent {
+  display: grid;
+  //   grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.tooltipLabel {
+  font-size: 0.8rem;
+  color: rgb(86, 86, 86);
+}
+
+.tooltipValue {
+  font-weight: 500;
+}

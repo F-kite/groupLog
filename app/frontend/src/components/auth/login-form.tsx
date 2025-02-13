@@ -77,7 +77,6 @@ export default function LoginForm({
                 <Input
                   id="email"
                   type="text"
-                  placeholder="user@kuzstu.ru"
                   autoComplete="email webauthn"
                   required
                   onChange={(e) => setLogin(e.target.value)}

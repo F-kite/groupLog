@@ -1,25 +1,46 @@
 .mainContainer {
-  padding: 4rem 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-items: center;
 
-  .subMainContainer {
+  .infoGridContainer {
     width: 70%;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-  }
-}
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: repeat(2, 20rem);
+    grid-template-areas:
+      "slider slider"
+      "chart calendar";
+    gap: 1rem;
+    place-items: stretch stretch;
 
-.scheduleSliderContainer {
-  width: 100%;
-  height: 21rem;
-  background-color: rgb(255, 255, 255);
-  border-radius: 15px;
-  border: 0.15rem solid rgb(139, 139, 140);
-  padding: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    .gridElement {
+      background-color: rgb(255, 255, 255);
+      border-radius: 15px;
+      border: 0.15rem solid rgb(139, 139, 140);
+      padding: 0 0.5rem;
+      justify-items: center;
+      align-content: center;
+      min-height: 20rem;
+    }
+
+    .slider {
+      grid-column: slider;
+    }
+
+    .chart {
+      grid-column: chart;
+      padding: 0.5rem;
+    }
+
+    .calendar {
+      grid-column: calendar;
+    }
+
+    @media (max-width: 960px) {
+      grid-template-columns: 2fr;
+      grid-template-areas:
+        "slider"
+        "calendar"
+        "chart";
+    }
+  }
 }

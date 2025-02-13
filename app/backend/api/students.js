@@ -56,6 +56,49 @@ const getById = async (req, res) => {
   } else return res.status(200).json(student);
 };
 
+// Получить всех студентов по группе
+const getByGroup = async (req, res) => {
+  // const encodedGroup = req.params.group;
+  // const data = decodeURIComponent(encodedGroup);
+  const data = req.params.group;
+
+  // Существует ли группа
+  const { data: group, error: groupError } = await supabase
+    .from("groups")
+    .select("group_id")
+    .eq("group_name", data)
+    .single();
+
+  if (groupError) {
+    return res.status(400).json({ error: "Invalid group. Group not found." });
+  }
+
+  const { data: students, error } = await supabase
+    .from("students")
+    .select(
+      `
+    student_id,
+    subgroup,
+    student_name,
+    student_surname,
+    student_patronymic,
+    student_phone,
+    student_email,
+    student_tgid
+      `
+    )
+    .eq("group_id", group.group_id);
+
+  if (!students || students.length === 0) {
+    return res.status(404).json({ error: "Students not found" });
+  } else if (error) {
+    console.error(error.message);
+    return res.status(500).json({ error: "Error to fetch students" });
+  } else {
+    return res.status(200).json(students);
+  }
+};
+
 // Добавить студента
 const create = async (req, res) => {
   const studentData = req.body;
@@ -180,6 +223,6 @@ const remove = async (req, res) => {
   return res.status(204).end();
 };
 
-const studentsApi = { getAll, getById, create, update, remove };
+const studentsApi = { getAll, getById, getByGroup, create, update, remove };
 
 export default studentsApi;

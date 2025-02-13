@@ -90,7 +90,6 @@ export function RegisterForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="user@kuzstu.ru"
                   autoComplete="email"
                   required
                   onChange={(e) => setEmail(e.target.value)}

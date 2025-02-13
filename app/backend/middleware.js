@@ -1,10 +1,9 @@
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import dotenv from "dotenv";
+import supabase from "./supabase/index.js";
 
 dotenv.config();
-
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET_TOKEN;
 
 export const validate = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body);
@@ -16,40 +15,48 @@ export const validate = (schema) => (req, res, next) => {
 };
 
 export const authMiddleware = async (req, res, next) => {
-  const token = req.cookies.authToken;
-
-  // if (!token) {
-  //   return res.status(401).json({ message: "Unauthorized: No token" });
-  // }
-
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in .env file.");
-  }
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // Добавляем информацию о пользователе в запрос
+    const authToken = req.cookies.authToken;
+    const refreshToken = req.cookies.refreshToken;
+
+    if (authToken && refreshToken) {
+      next();
+    } else if (refreshToken) {
+      const { data: refreshSession, refreshError } =
+        await supabase.auth.refreshSession({
+          refresh_token: refreshToken,
+        });
+      const { session } = refreshSession;
+
+      if (refreshError || !refreshSession) {
+        console.debug(refreshSession);
+        return res.status(400).json({ error: "Ошибка при обновлении токена" });
+      }
+
+      // сохранение токена авторизации в куки
+      res.cookie("authToken", session.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 1000, // 1 час
+      });
+      console.debug(" -- Токен авторизации обновился");
+
+      // сохранение токена обновления авторизации в куки
+      res.cookie("refreshToken", session.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
+      });
+      console.debug(" -- Токен обновления обновился");
+    } else {
+      console.debug("Ни один токен не найден");
+      return res.status(400).json({ error: "Tokens were not found" });
+    }
     next();
   } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      try {
-        const refreshResponse = await axios.post(
-          "http://localhost:3001/api/refresh-token",
-          {},
-          { headers: { Cookie: req.headers.cookie } }
-        );
-
-        const decoded = jwt.verify(newToken, JWT_SECRET);
-        req.user = decoded;
-        next();
-      } catch (refreshError) {
-        console.error(refreshError.message);
-        return res
-          .status(401)
-          .json({ message: "Session expired. Please login again." });
-      }
-    } else {
-      console.error(error.message);
-      res.status(401).json({ message: "Invalid token" });
-    }
+    console.error(error);
+    res.status(400).json({ message: "Invalid token" });
   }
 };

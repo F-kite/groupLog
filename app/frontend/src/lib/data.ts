@@ -1,15 +1,17 @@
+export type DailyScheduleLessonProps = {
+  timeStart: string;
+  timeEnd: string;
+  subjectName: string;
+  subjectType: string;
+  teacherName: string;
+  roomNumber: string;
+};
+
 export type DailyScheduleProps = {
   dayOfWeek: string;
   date: string;
   isHoliday: boolean;
-  lessons: {
-    timeStart: string;
-    timeEnd: string;
-    subjectName: string;
-    subjectType: string;
-    teacherName: string;
-    roomNumber: string;
-  }[];
+  lessons: DailyScheduleLessonProps[];
 };
 
 export const dailySchedule: DailyScheduleProps = {
@@ -28,18 +30,18 @@ export const dailySchedule: DailyScheduleProps = {
     {
       timeStart: "10:50:00",
       timeEnd: "12:20:00",
-      subjectName: "Иностранный язык в профессиональной деятельности",
-      subjectType: "пр",
-      teacherName: "Юргель Е.В.",
-      roomNumber: "0403",
+      subjectName: "Внедрение информационной системы - 1 п/г",
+      subjectType: "лаб",
+      teacherName: "Дементьева Ю.С.",
+      roomNumber: "5506",
     },
     {
       timeStart: "10:50:00",
       timeEnd: "12:20:00",
-      subjectName: "Иностранный язык в профессиональной деятельности",
-      subjectType: "пр",
-      teacherName: "Завьялова М.Н.",
-      roomNumber: "0401",
+      subjectName: "Разработка кода информационных систем - 2 п/г",
+      subjectType: "лаб",
+      teacherName: "Ерошевич К.В.",
+      roomNumber: "5514",
     },
     {
       timeStart: "13:20:00",

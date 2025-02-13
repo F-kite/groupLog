@@ -10,6 +10,22 @@
   padding: 1rem;
 }
 
+@font-face {
+  font-family: "Tilda-sans-md";
+  src: url("../fonts/tilda-sans_medium.ttf");
+}
+@font-face {
+  font-family: "Tilda-sans-rg";
+  src: url("../fonts/tilda-sans_regular.ttf");
+}
+.Tilda-sans-md {
+  font-family: "Tilda-sans-md";
+}
+
+.Tilda-sans-rg {
+  font-family: "Tilda-sans-rg";
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

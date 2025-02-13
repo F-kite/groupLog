@@ -38,7 +38,6 @@ import {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-let serverReady = false;
 
 app.use(express.json());
 app.use(cookieParser());
@@ -61,21 +60,17 @@ app.use(
 );
 
 app.listen(PORT, (error) => {
-  error
-    ? console.log(error)
-    : (console.log(`listening port ${PORT}`), (serverReady = true));
+  console.log("Starting the server..");
+  error ? console.log(error) : console.log(`Listening port ${PORT}`);
 });
 
 app.get("/ping", (req, res) => {
-  if (serverReady) {
-    res.status(200).json({ message: "Server worked" });
-  }
+  res.status(200).json({ message: "Server worked" });
 });
 
 app.get("/dashboard", authMiddleware, (req, res) => {
   res.json({
-    message: "Вы авторизованы",
-    user: req.user,
+    message: "Добро пожаловать на защищенную страницу",
   });
 });
 
@@ -101,40 +96,41 @@ app.post(
 app.post("/api/users/login", validate(userLoginSchema), userApi.login);
 app.post("/api/users/logout", userApi.logout);
 app.put("/api/users/update", validate(userSchemaToUpdate), userApi.update); // нужно проверить с авторизацией
-app.post("/api/users/:id/avatar", userApi.uploadAvatar); // нужно проверить с авторизацией
+app.post("/api/users/id/:id/avatar", userApi.uploadAvatar); // нужно проверить с авторизацией
 
 app.get("/api/groups", groupApi.getAll); // Получить все группы
-app.get("/api/groups/:id", groupApi.getById);
+app.get("/api/groups/id/:id", groupApi.getById);
 app.post("/api/groups", validate(groupSchemaToCreate), groupApi.create);
-app.put("/api/groups/:id", validate(groupSchemaToUpdate), groupApi.update);
-app.delete("/api/groups/:id", groupApi.remove);
+app.put("/api/groups/id/:id", validate(groupSchemaToUpdate), groupApi.update);
+app.delete("/api/groups/id/:id", groupApi.remove);
 
 app.get("/api/students", studentsApi.getAll); // Получить всех студентов
-app.get("/api/students/:id", studentsApi.getById);
+app.get("/api/students/id/:id", studentsApi.getById);
 app.post("/api/students", validate(studentSchemaToCreate), studentsApi.create);
+app.get("/api/students/group/:group", studentsApi.getByGroup);
 app.put(
-  "/api/students/:id",
+  "/api/students/id/:id",
   validate(studentSchemaToUpdate),
   studentsApi.update
 );
-app.delete("/api/students/:id", studentsApi.remove);
+app.delete("/api/students/id/:id", studentsApi.remove);
 
 app.get("/api/teachers", teacherApi.getAll); // Получить всех преподавателей
-app.get("/api/teachers/:id", teacherApi.getById);
+app.get("/api/teachers/id/:id", teacherApi.getById);
 app.post("/api/teachers", validate(teacherSchemaToCreate), teacherApi.create);
 app.put(
-  "/api/teachers/:id",
+  "/api/teachers/id/:id",
   validate(teacherSchemaToUpdate),
   teacherApi.update
 );
-app.delete("/api/teachers/:id", teacherApi.remove);
+app.delete("/api/teachers/id/:id", teacherApi.remove);
 
 app.get("/api/subjects", subjectsApi.getAll); // Получить все предметы
-app.get("/api/subjects/:id", subjectsApi.getById);
+app.get("/api/subjects/id/:id", subjectsApi.getById);
 app.post("/api/subjects", validate(subjectSchemaToCreate), subjectsApi.create);
 app.put(
-  "/api/subjects/:id",
+  "/api/subjects/id/:id",
   validate(subjectSchemaToUpdate),
   subjectsApi.update
 );
-app.delete("/api/subjects/:id", subjectsApi.remove);
+app.delete("/api/subjects/id/:id", subjectsApi.remove);

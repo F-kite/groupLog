@@ -15,16 +15,14 @@ export default function ProtectedRoute({
     const checkAuth = async () => {
       try {
         await getProtectedRouteData().then(async (res) => {
-          console.debug(res);
           if ("error" in res) {
-            throw new Error(`ProtectedRoute error: ${res.error}`);
+            throw new Error(`Требуется авторизация !\n${res.error}`);
           } else if ("message" in res) {
             setIsAuthenticated(true);
-            const userEmail = res.message.data.user.email;
-            console.debug({ message: userEmail });
           }
         });
       } catch (error) {
+        console.error(error);
         setIsAuthenticated(false);
       } finally {
         setLoading(false);
