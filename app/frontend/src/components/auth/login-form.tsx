@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { LoginSchema } from "../../../schemas/index";
 import FormError from "./FormError";
 import userApi from "../../utils/api/users";
-import { checkServer } from "../../utils/api/index";
 
 type DataUserProps = {
   userLogin: string;
@@ -60,9 +59,6 @@ export default function LoginForm({
     });
   }
 
-  useEffect(() => {
-    checkServer().then((res) => console.log(res));
-  }, []);
   return (
     <div className={cn("flex flex-col gap-6 ", className)} {...props}>
       <Card>

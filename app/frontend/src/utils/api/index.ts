@@ -7,7 +7,7 @@ const API_URL = "http://localhost:3001";
 export async function checkServer() {
   try {
     const response = await axios.get(`${API_URL}/ping`);
-    return { message: response.data.message };
+    return { message: response.data };
   } catch (error) {
     if (error instanceof Error) {
       return { error: error.message };

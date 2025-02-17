@@ -1,17 +1,19 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import LoginPage from "./app/login/page.tsx";
 import RegisterPage from "./app/register/page.tsx";
-import MainLayout from "./pages/MainLayout/MainLayout.tsx";
-import ErrorPageNotFound from "./pages/ErrorPages/404Page.tsx";
-import TestingPage from "./pages/TestingPage/TestingPage.tsx";
-import ProtectedRoute from "../middleware.tsx";
-
-import "./App.css";
 import HomePage from "./components/HomePage/HomePage.tsx";
+import MainLayout from "./pages/MainLayout/MainLayout.tsx";
 import AttendanceTable from "./pages/AttendancePage/AttendancePage.tsx";
-import studentApi from "./utils/api/students.ts";
-import { useEffect, useState } from "react";
+import ErrorPageNotFound from "./pages/ErrorPages/404Page.tsx";
+import ErrorServerUnavailable from "./pages/ErrorPages/503Page.tsx";
+import TestingPage from "./pages/TestingPage/TestingPage.tsx";
+
+import ProtectedRoute from "../middleware.tsx";
 import { StudentContext, Students } from "@/hooks/StudentContext.ts";
+import studentApi from "./utils/api/students.ts";
+import { checkServer } from "./utils/api/index.ts";
+import "./App.css";
 
 {
   /*
@@ -20,28 +22,62 @@ import { StudentContext, Students } from "@/hooks/StudentContext.ts";
 }
 
 export default function App() {
+  const [isServerDown, setIsServerDown] = useState<boolean>();
   const [students, setStudents] = useState<Students[]>([]);
   const [group, setGroup] = useState("ИСт-221");
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchStudents = async (group: string) => {
+    const performCheck = async () => {
       try {
-        setLoading(true);
-        const response = await studentApi.getStudentsByGroup(group);
-        if (response.error) {
-          throw new Error(response.error);
+        const result = await checkServer();
+        if (!result.error) {
+          console.log("Сервер доступен");
+          setIsServerDown(false);
+        } else {
+          console.error("Ошибка соединения с сервером:", result.error);
+          setIsServerDown(true);
         }
-        setStudents(response);
-      } catch (error: any) {
-        console.error(error.message);
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        console.error("Не удалось выполнить проверку:", error);
       }
     };
 
-    fetchStudents(group);
-  }, []);
+    performCheck();
+
+    const intervalId = setInterval(performCheck, 20 * 1000);
+
+    if (!isServerDown) {
+      const fetchStudents = async (group: string) => {
+        try {
+          setLoading(true);
+          const response = await studentApi.getStudentsByGroup(group);
+          if (response.error) {
+            throw new Error(response.error);
+          }
+          setStudents(response);
+        } catch (error: any) {
+          console.error(error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchStudents(group);
+    }
+    // Очистка интервала при размонтировании компонента
+    return () => clearInterval(intervalId);
+  }, [isServerDown, group]);
+
+  //Рендер страницы, если сервер недоступен
+  if (isServerDown) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="*" element={<ErrorServerUnavailable />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
 
   return (
     <BrowserRouter>
