@@ -11,21 +11,25 @@ import groupApi from "./api/groups.js";
 import subjectsApi from "./api/subjects.js";
 import studentsApi from "./api/students.js";
 import scheduleApi from "./api/schedules.js";
+import attendanceApi from "./api/attendance.js";
 
 import {
   groupSchemaToCreate,
   groupSchemaToUpdate,
 } from "./schemas/groupSchema.js";
+
 import {
-  studentSchemaToCreate,
   studentSchemaToUpdate,
+  studentsArraySchemaToCreate,
 } from "./schemas/studentSchema.js";
+
 import {
   userRegisterSchema,
   userDeleteSchema,
   userSchemaToUpdate,
   userLoginSchema,
 } from "./schemas/userSchema.js";
+
 import {
   teacherSchemaToCreate,
   teacherSchemaToUpdate,
@@ -35,6 +39,11 @@ import {
   subjectSchemaToCreate,
   subjectSchemaToUpdate,
 } from "./schemas/subjectSchema.js";
+
+import {
+  attendanceSchemaToCreate,
+  attendanceSchemaToUpdate,
+} from "./schemas/attendanceSchema.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -89,48 +98,71 @@ app.get("api/admin/user", userApi.getByEmail);
 app.delete("api/admin/user", validate(userDeleteSchema), userApi.remove);
 
 app.post(
-  "/api/users/registration",
+  "/api/user/registration",
   validate(userRegisterSchema),
   userApi.registration
 );
-app.post("/api/users/login", validate(userLoginSchema), userApi.login);
-app.post("/api/users/logout", userApi.logout);
-app.put("/api/users/update", validate(userSchemaToUpdate), userApi.update); // нужно проверить с авторизацией
-app.post("/api/users/id/:id/avatar", userApi.uploadAvatar); // нужно проверить с авторизацией
+app.post("/api/user/login", validate(userLoginSchema), userApi.login);
+app.post("/api/user/logout", userApi.logout);
+app.put("/api/user/update", validate(userSchemaToUpdate), userApi.update);
+app.post("/api/user/id/:id/avatar", userApi.uploadAvatar);
 
-app.get("/api/groups", groupApi.getAll); // Получить все группы
-app.get("/api/groups/id/:id", groupApi.getById);
-app.post("/api/groups", validate(groupSchemaToCreate), groupApi.create);
-app.put("/api/groups/id/:id", validate(groupSchemaToUpdate), groupApi.update);
-app.delete("/api/groups/id/:id", groupApi.remove);
+// Группы
+app.get("/api/group", groupApi.getAll);
+app.get("/api/group/id/:id", groupApi.getById);
+app.post("/api/group", validate(groupSchemaToCreate), groupApi.create);
+app.put("/api/group/id/:id", validate(groupSchemaToUpdate), groupApi.update);
+app.delete("/api/group/id/:id", groupApi.remove);
 
-app.get("/api/students", studentsApi.getAll); // Получить всех студентов
-app.get("/api/students/id/:id", studentsApi.getById);
-app.post("/api/students", validate(studentSchemaToCreate), studentsApi.create);
-app.get("/api/students/group/:group", studentsApi.getByGroup);
+// Студенты
+app.get("/api/student", studentsApi.getAll);
+app.get("/api/student/id/:id", studentsApi.getById);
+app.post(
+  "/api/student",
+  validate(studentsArraySchemaToCreate),
+  studentsApi.create
+);
+app.get("/api/student/group/:group", studentsApi.getByGroup);
 app.put(
-  "/api/students/id/:id",
+  "/api/student/:group/:id",
   validate(studentSchemaToUpdate),
   studentsApi.update
 );
-app.delete("/api/students/id/:id", studentsApi.remove);
+app.delete("/api/student/id/:id", studentsApi.remove);
 
-app.get("/api/teachers", teacherApi.getAll); // Получить всех преподавателей
-app.get("/api/teachers/id/:id", teacherApi.getById);
-app.post("/api/teachers", validate(teacherSchemaToCreate), teacherApi.create);
+// Преподаватели
+app.get("/api/teacher", teacherApi.getAll);
+app.get("/api/teacher/id/:id", teacherApi.getById);
+app.post("/api/teacher", validate(teacherSchemaToCreate), teacherApi.create);
 app.put(
-  "/api/teachers/id/:id",
+  "/api/teacher/id/:id",
   validate(teacherSchemaToUpdate),
   teacherApi.update
 );
-app.delete("/api/teachers/id/:id", teacherApi.remove);
+app.delete("/api/teacher/id/:id", teacherApi.remove);
 
-app.get("/api/subjects", subjectsApi.getAll); // Получить все предметы
-app.get("/api/subjects/id/:id", subjectsApi.getById);
-app.post("/api/subjects", validate(subjectSchemaToCreate), subjectsApi.create);
+// Предметы
+app.get("/api/subject", subjectsApi.getAll);
+app.get("/api/subject/id/:id", subjectsApi.getById);
+app.post("/api/subject", validate(subjectSchemaToCreate), subjectsApi.create);
 app.put(
-  "/api/subjects/id/:id",
+  "/api/subject/id/:id",
   validate(subjectSchemaToUpdate),
   subjectsApi.update
 );
-app.delete("/api/subjects/id/:id", subjectsApi.remove);
+app.delete("/api/subject/id/:id", subjectsApi.remove);
+
+// Посещаемость
+app.get("/api/attendance", attendanceApi.getAll);
+app.get("/api/attendance/id/:id", attendanceApi.getById);
+app.post(
+  "/api/attendance",
+  validate(attendanceSchemaToCreate),
+  attendanceApi.create
+);
+app.put(
+  "/api/attendance/id/:id",
+  validate(attendanceSchemaToUpdate),
+  attendanceApi.update
+);
+app.delete("/api/attendance/id/:id", attendanceApi.remove);

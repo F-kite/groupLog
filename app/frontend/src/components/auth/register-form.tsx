@@ -64,9 +64,7 @@ export function RegisterForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className={`text-3xl Tilda-sans-md }`}>
-            Регистрация
-          </CardTitle>
+          <CardTitle className={styles.title}>Регистрация</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>

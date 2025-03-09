@@ -101,6 +101,7 @@ const login = async (req, res) => {
     let email;
     const isEmail = emailSchema.validate(userLogin).error === undefined;
     const isUsername = usernameSchema.validate(userLogin).error === undefined;
+    console.debug(isEmail, isUsername)
     if (isEmail) {
       email = userLogin;
     } else if (isUsername) {

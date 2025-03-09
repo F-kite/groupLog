@@ -10,3 +10,7 @@ $maxWidth: 1280;
 .cardTitle {
   @include adaptiv-font(40, 24);
 }
+
+.title {
+  font-size: 1.7rem;
+}

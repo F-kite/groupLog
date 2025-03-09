@@ -11,7 +11,8 @@ const getAll = async (req, res) => {
     student_patronymic,
     student_phone,
     student_email,
-    student_tgid
+    student_tgid,
+    enrollment_year
   `);
 
   if (error) {
@@ -42,7 +43,8 @@ const getById = async (req, res) => {
     student_patronymic,
     student_phone,
     student_email,
-    student_tgid
+    student_tgid,
+    enrollment_year
       `
     )
     .eq("student_id", id)
@@ -58,10 +60,8 @@ const getById = async (req, res) => {
 
 // Получить всех студентов по группе
 const getByGroup = async (req, res) => {
-  // const encodedGroup = req.params.group;
-  // const data = decodeURIComponent(encodedGroup);
   const data = req.params.group;
-
+  // console.log(data);
   // Существует ли группа
   const { data: group, error: groupError } = await supabase
     .from("groups")
@@ -84,10 +84,12 @@ const getByGroup = async (req, res) => {
     student_patronymic,
     student_phone,
     student_email,
-    student_tgid
+    student_tgid,
+    enrollment_year
       `
     )
-    .eq("group_id", group.group_id);
+    .eq("group_id", group.group_id)
+    .order("student_surname", { ascending: true });
 
   if (!students || students.length === 0) {
     return res.status(404).json({ error: "Students not found" });
@@ -99,48 +101,87 @@ const getByGroup = async (req, res) => {
   }
 };
 
-// Добавить студента
+// Добавить массив студентов
 const create = async (req, res) => {
-  const studentData = req.body;
+  const studentsData = req.body;
 
-  const group_id = studentData.group_id;
-  const student_name = studentData.student_name;
-  const student_surname = studentData.student_surname;
-
-  // Существует ли группа с указанным ID
-  const { data: group, error: curatorError } = await supabase
-    .from("groups")
-    .select("*")
-    .eq("group_id", group_id);
-
-  if (curatorError) {
+  if (!Array.isArray(studentsData) || studentsData.length === 0) {
     return res
       .status(400)
-      .json({ error: "Invalid group id. Group not found." });
+      .json({ error: "Invalid input. Expected an array of students." });
   }
 
-  //Существует ли студент
-  const { data: student, error: studentError } = await supabase
-    .from("students")
-    .select("*")
-    .eq("student_name", student_name)
-    .eq("student_surname", student_surname);
+  const group_name = studentsData[0].group_name;
 
-  if (student.length !== 0) {
-    return res.status(400).json({ error: "Student already exists" });
-  } else if (studentError) {
-    console.error(error.message);
-    return res.status(500).json({ error: "Error to create student" });
+  // Существует ли группа с указанным именем
+  const { data: group, error: groupError } = await supabase
+    .from("groups")
+    .select("group_id")
+    .eq("group_name", group_name)
+    .single();
+
+  if (groupError || group.length === 0) {
+    return res
+      .status(400)
+      .json({ error: "Invalid group name. Group not found." });
+  }
+
+  const updatedStudentsData = studentsData.map((student) => {
+    const group_id = group.group_id;
+    // Удаляем group_name и добавляем group_id
+    const { group_name, ...rest } = student;
+    return { ...rest, group_id };
+  });
+
+  const studentNames = updatedStudentsData.map((student) => ({
+    student_name: student.student_name,
+    student_surname: student.student_surname,
+  }));
+
+  // Проверяем, существуют ли уже такие студенты в базе данных
+  const { data: existingStudents, error: studentError } = await supabase
+    .from("students")
+    .select("student_name, student_surname")
+    .in(
+      "student_name",
+      studentNames.map((s) => s.student_name)
+    )
+    .in(
+      "student_surname",
+      studentNames.map((s) => s.student_surname)
+    );
+
+  if (studentError) {
+    console.error(studentError.message);
+    return res
+      .status(500)
+      .json({ error: "Error checking for existing students." });
+  }
+
+  // Находим дубликаты
+  const duplicateStudents = existingStudents.filter((existingStudent) =>
+    studentNames.some(
+      (name) =>
+        name.student_name === existingStudent.student_name &&
+        name.student_surname === existingStudent.student_surname
+    )
+  );
+
+  if (duplicateStudents.length > 0) {
+    return res.status(400).json({
+      error: "Some students already exist.",
+      duplicates: duplicateStudents,
+    });
   }
 
   const { data, error } = await supabase
     .from("students")
-    .insert(studentData)
+    .insert(updatedStudentsData)
     .select();
 
   if (error) {
     console.error(error.message);
-    return res.status(500).json({ error: "Failed to create student" });
+    return res.status(500).json({ error: "Failed to create students" });
   }
 
   return res.status(200).json(data);
@@ -148,49 +189,71 @@ const create = async (req, res) => {
 
 // Обновить данные студента
 const update = async (req, res) => {
-  const { id } = req.params;
-  const studentData = req.body;
+  try {
+    const { group, id } = req.params;
+    const studentData = req.body;
+    //Существует ли студент
+    const { data: student, error: studentError } = await supabase
+      .from("students")
+      .select("*")
+      .eq("student_id", id)
+      .single();
 
-  //Существует ли
-  const { data: student, error: studentError } = await supabase
-    .from("students")
-    .select("*")
-    .eq("student_id", id)
-    .single();
-
-  if (!student || student.length === 0) {
-    return res.status(400).json({ error: "Student not found" });
-  } else if (studentError) {
-    console.error(error.message);
-    return res.status(500).json({ error: "Error to update student" });
-  }
-
-  //Данные для обновления
-  const updateData = {};
-  for (const key in studentData) {
-    if (studentData[key] !== undefined || studentData[key] !== student[key]) {
-      updateData[key] = studentData[key];
+    if (!student || student.length === 0) {
+      return res.status(400).json({ error: "Student not found" });
+    } else if (studentError) {
+      console.error(error.message);
+      return res.status(500).json({ error: "Error to update student" });
     }
-  }
 
-  // Если нет данных для обновления
-  if (Object.keys(updateData).length === 0) {
-    return res.status(400).json({ error: "No data provided for update" });
-  }
+    // Существует ли группа с указанным именем
+    const { data: chekGroup, error: chekGroupError } = await supabase
+      .from("groups")
+      .select("group_id")
+      .eq("group_name", group)
+      .single();
 
-  const { data, error } = await supabase
-    .from("students")
-    .update(updateData)
-    .eq("student_id", id)
-    .select()
-    .single();
+    if (chekGroupError || chekGroup.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Invalid group name. Group not found." });
+    }
 
-  if (error) {
-    console.error(error.message);
-    return res.status(404).json({ error: "Student not found!" });
-  }
+    if (studentData.group_name) {
+      const group_id = chekGroup.group_id;
+      // Удаляем group_name и добавляем group_id
+      const { group_name, ...rest } = studentData;
+      return { ...rest, group_id };
+    }
 
-  return res.status(200).json(data);
+    //Данные для обновления
+    const updateData = {};
+    for (const key in studentData) {
+      if (studentData[key] !== undefined || studentData[key] !== student[key]) {
+        updateData[key] = studentData[key];
+      }
+    }
+
+    // Если нет данных для обновления
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No data provided for update" });
+    }
+
+    console.log(updateData);
+    const { data, error } = await supabase
+      .from("students")
+      .update(updateData)
+      .eq("student_id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error.message);
+      return res.status(404).json({ error: "Student not found!" });
+    }
+
+    return res.status(200).json(data);
+  } catch (error) {}
 };
 
 // Удалить

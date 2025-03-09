@@ -11,6 +11,8 @@ import { LoginSchema } from "../../../schemas/index";
 import FormError from "./FormError";
 import userApi from "../../utils/api/users";
 
+import styles from "./styles.module.scss";
+
 type DataUserProps = {
   userLogin: string;
   password: string;
@@ -63,7 +65,7 @@ export default function LoginForm({
     <div className={cn("flex flex-col gap-6 ", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-3xl Tilda-sans-md">Авторизация</CardTitle>
+          <CardTitle className={styles.title}>Авторизация</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>

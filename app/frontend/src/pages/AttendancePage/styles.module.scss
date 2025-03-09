@@ -1,6 +1,25 @@
 .container {
-  max-width: 80%;
+  min-width: 70%;
   margin: 0 auto;
+}
+
+.title {
+  .info {
+    display: flex;
+    gap: 0.5rem;
+    .numStudents {
+      background: rgb(228, 228, 228);
+      color: rgb(113, 117, 113);
+      padding: 0 0.6rem;
+      border-radius: 1rem;
+    }
+  }
+
+  .buttons {
+    display: flex;
+    margin: 0.8rem 0;
+    gap: 0.8rem;
+  }
 }
 
 .studentCheckbox {
@@ -8,9 +27,13 @@
 }
 
 .studentCell {
-  display: flex;
+  height: 3.25rem;
+  display: flex; /* Используем flexbox для удобного выравнивания */
+  align-items: center; /* Вертикальное выравнивание по центру */
+  text-align: center; /* Выравнивание текста по центру */
+  vertical-align: middle; /* Для совместимости с таблицами */
 }
 
 .placeholderRow {
-  height: 52px; /* Фиксированная высота */
+  height: 3.25rem; /* Фиксированная высота */
 }

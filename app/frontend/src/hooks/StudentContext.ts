@@ -9,6 +9,7 @@ export interface Students {
   student_email: string;
   student_phone: string;
   student_tgid: string;
+  enrollment_year: number;
   marks: { [key: string]: "Б" | "УП" | "Н" };
 }
 

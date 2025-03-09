@@ -5,6 +5,8 @@ import styles from "./styles.module.scss";
 
 import { useResize } from "@/hooks/useResize";
 
+import { UserInfo } from "@/store/data";
+
 const navItems = [
   { name: "Главная", href: "/" },
   { name: "Посещаемость", href: "/attendance" },
@@ -12,17 +14,17 @@ const navItems = [
   { name: "Расписание", href: "/schedule" },
 ];
 
-export default function Navbar() {
+export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
   const width = useResize();
 
-  const username = "Ильичев Виталий";
-  const useremail = "ilichevv_v845@mail.ru";
+  const username = UserInfo.userName;
+  const useremail = UserInfo.userEmail;
 
   const handleLogout = () => {
-    // Реализоватьлогику выхода
+    // Реализовать логику выхода
     console.log("Выход из системы");
   };
 
@@ -31,14 +33,14 @@ export default function Navbar() {
       <div className={styles.container}>
         <div className={styles.flexContainer}>
           <div className={styles.logo}>
-            <span className="Tilda-sans-md">groupLog</span>
+            <span>groupLog</span>
           </div>
           <div className={styles.desktopMenu}>
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`${styles.menuItem} Tilda-sans-md ${
+                className={`${styles.menuItem} ${
                   location.pathname === item.href ? styles.active : ""
                 }`}
               >
@@ -52,9 +54,7 @@ export default function Navbar() {
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             >
               <User className="h-5 w-5 mr-2" />
-              <span className={`${styles.userName} Tilda-sans-rg`}>
-                {username}
-              </span>
+              <span className={`${styles.userName}`}>{username}</span>
             </button>
             {isUserMenuOpen && width > 960 && (
               <div className={styles.userDropdown}>
@@ -90,7 +90,7 @@ export default function Navbar() {
             <Link
               key={item.name}
               to={item.href}
-              className={`${styles.mobileMenuItem} Tilda-sans-md ${
+              className={`${styles.mobileMenuItem} ${
                 location.pathname === item.href ? styles.active : ""
               }`}
               onClick={() => setIsOpen(false)}

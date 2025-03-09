@@ -36,7 +36,7 @@ export default function Calendar({
   className,
   showWeekNumbers = true,
   weekStartsOn = 1,
-  size = "md",
+  size = "sm",
   width = "50%",
   height = "auto",
 }: CalendarProps) {

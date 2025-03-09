@@ -6,7 +6,7 @@ import styles from "./styles.module.scss";
 
 export default function HomePage() {
   const showWeekNumbers = true;
-  const size: "sm" | "md" | "lg" = "md";
+  const size: "sm" | "md" | "lg" = "sm";
   const width = "90%";
   const height = "90%";
   return (

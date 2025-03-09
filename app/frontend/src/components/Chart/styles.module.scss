@@ -9,11 +9,6 @@
   align-content: center;
 }
 
-.title {
-  font-size: 1.3rem;
-  text-align: center;
-}
-
 .periodButtons {
   display: flex;
   justify-content: center;
@@ -66,10 +61,7 @@
 }
 
 .tooltipLabel {
+  font-family: "Inter Medium";
   font-size: 0.8rem;
   color: rgb(86, 86, 86);
-}
-
-.tooltipValue {
-  font-weight: 500;
 }

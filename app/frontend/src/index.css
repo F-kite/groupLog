@@ -2,22 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
+:root {
+  font-family: "Inter SB";
+
+  --grey-background: rgba(86, 86, 86, 0.8);
+  --white-background: rgb(238, 238, 238);
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
+  height: 100%;
+  font-size: 16px;
 }
 #root {
   padding: 1rem;
+  background-color: white;
 }
 
 @font-face {
   font-family: "Tilda-sans-md";
   src: url("../fonts/tilda-sans_medium.ttf");
+  font-weight: normal;
+  font-style: normal;
 }
 @font-face {
   font-family: "Tilda-sans-rg";
   src: url("../fonts/tilda-sans_regular.ttf");
+  font-weight: normal;
+  font-style: normal;
 }
+
+@font-face {
+  font-family: "Tactic Sans";
+  src: url("/fonts/TacticSans-BlkIt.ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Inter Medium";
+  src: url("/fonts/Inter-Medium.otf");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Inter SB";
+  src: url("/fonts/Inter-SemiBold.otf");
+  font-weight: normal;
+  font-style: normal;
+}
+
 .Tilda-sans-md {
   font-family: "Tilda-sans-md";
 }

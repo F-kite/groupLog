@@ -16,9 +16,9 @@ import {
   dailySchedule,
   DailyScheduleLessonProps,
   DailyScheduleProps,
-} from "../../lib/data";
+} from "../../store/data";
 
-import photo from "@/assets/image/18.jpg";
+import photo from "@assets/cardBackground/18.jpg";
 import styles from "./styles.module.scss";
 
 type Lesson = DailyScheduleProps["lessons"][0];

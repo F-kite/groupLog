@@ -12,38 +12,13 @@ import {
 import styles from "./styles.module.scss";
 import { Button } from "../ui/button";
 
-const dailyData = [
-  { lesson: "1 пара", time: "9:00-10:30", attendance: 75 },
-  { lesson: "2 пара", time: "10:50-12:20", attendance: 90 },
-  { lesson: "3 пара", time: "13:20-14:50", attendance: 85 },
-  { lesson: "4 пара", time: "15:10-16:40", attendance: 80 },
-  { lesson: "5 пара", time: "17:00-18:30", attendance: 70 },
-  { lesson: "6 пара", time: "18:50-20:20", attendance: 20 },
-];
+import { AttendanceStatisticsProps, attendanceStatistics } from "@/store/data";
 
-const weeklyData = [
-  { date: "01.01.2025", day: "Пн", attendance: 85 },
-  { date: "02.01.2025", day: "Вт", attendance: 88 },
-  { date: "03.01.2025", day: "Ср", attendance: 90 },
-  { date: "04.01.2025", day: "Чт", attendance: 87 },
-  { date: "05.01.2025", day: "Пт", attendance: 82 },
-  { date: "06.01.2025", day: "Сб", attendance: 20 },
-];
-
-const monthlyData = [
-  { fullMonth: "Январь", shortMonth: "Янв", attendance: 82 },
-  { fullMonth: "Февраль", shortMonth: "Фев", attendance: 85 },
-  { fullMonth: "Март", shortMonth: "Мар", attendance: 88 },
-  { fullMonth: "Апрель", shortMonth: "Апр", attendance: 87 },
-  { fullMonth: "Май", shortMonth: "Май", attendance: 90 },
-  { fullMonth: "Июнь", shortMonth: "Июн", attendance: 92 },
-  { fullMonth: "Июль", shortMonth: "Июл", attendance: 95 },
-  { fullMonth: "Август", shortMonth: "Авг", attendance: 93 },
-  { fullMonth: "Сентябрь", shortMonth: "Сен", attendance: 89 },
-  { fullMonth: "Октябрь", shortMonth: "Окт", attendance: 86 },
-  { fullMonth: "Ноябрь", shortMonth: "Ноя", attendance: 84 },
-  { fullMonth: "Декабрь", shortMonth: "Дек", attendance: 83 },
-];
+const {
+  dailyStatistics,
+  weeklyStatistics,
+  monthlyStatistics,
+}: AttendanceStatisticsProps = attendanceStatistics;
 
 type Period = "day" | "week" | "month";
 
@@ -51,9 +26,9 @@ export default function VisitorChart() {
   const [period, setPeriod] = useState<Period>("day");
 
   const data = {
-    day: dailyData,
-    week: weeklyData,
-    month: monthlyData,
+    day: dailyStatistics,
+    week: weeklyStatistics,
+    month: monthlyStatistics,
   }[period];
 
   const periodLabels = {
@@ -65,7 +40,6 @@ export default function VisitorChart() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        {/* <h2 className={styles.title}>Статистика посещаемости группы</h2> */}
         <div className={styles.periodButtons}>
           {Object.entries(periodLabels).map(([key, label]) => (
             <Button

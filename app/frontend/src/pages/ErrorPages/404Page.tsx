@@ -17,7 +17,7 @@ export default function ErrorPageNotFound() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-[500px]">
         <CardHeader>
-          <CardTitle className="text-5xl font-bold text-gray-700 pb-5">
+          <CardTitle className="text-6xl font-bold text-gray-700 pb-2">
             404
           </CardTitle>
           <CardDescription className="text-xl font-bold text-gray-600">
@@ -25,7 +25,7 @@ export default function ErrorPageNotFound() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600 mb-3 text-l text-center ">
+          <p className="text-gray-600 mb-2 mt-2 text-l text-center ">
             Страница, которую вы ищете, не существует или была перемещена.
           </p>
         </CardContent>

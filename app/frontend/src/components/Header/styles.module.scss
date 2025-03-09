@@ -1,73 +1,3 @@
-// .headerContainer {
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-//   background-image: url("/image/main_bg_photo.jpg");
-//   background-size: cover;
-//   background-repeat: no-repeat;
-//   border-radius: 10px;
-//   padding: 1.75rem 0;
-
-//   .subHeaderContainer {
-//     width: 70%;
-//     display: flex;
-//     justify-content: space-around;
-//     align-items: center;
-//     padding: 0.8rem 1rem;
-//     border-radius: 10px;
-//     background-color: white;
-//   }
-// }
-
-// .avatarContainer {
-//   display: flex;
-//   align-items: center;
-
-//   .avatar {
-//     width: 2.5rem;
-//     height: 2.5rem;
-//     border: 1px rgb(86, 86, 86) solid;
-//   }
-
-//   .avatarText {
-//     margin-left: 0.3rem;
-//     font-size: 1rem;
-//     line-height: 1.25rem;
-//     font-weight: 500;
-//   }
-// }
-
-// .menuContainer {
-//   min-width: 30vw;
-
-//   .menu {
-//     display: flex;
-//     align-items: center;
-//     justify-content: space-between;
-
-//     .menuItem {
-//       padding: 8px 10px;
-//       border-radius: 8px;
-//       font-size: 1.25rem;
-//       line-height: 1.25rem;
-//       transition-property: color, background-color, border-color,
-//         text-decoration-color, fill, stroke;
-//       transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-//       transition-duration: 300ms;
-
-//       &:hover {
-//         color: #4b5563;
-//         background-color: rgba(121, 121, 121, 0.123);
-//       }
-//     }
-//   }
-// }
-
-// .buttonContainer {
-//   display: flex;
-//   align-items: center;
-// }
-
 .nav {
   width: 70%;
   border-radius: 10px;
@@ -90,8 +20,8 @@
 .logo {
   display: flex;
   align-items: center;
+  font-family: "Inter Medium";
   font-size: 1.25rem;
-  font-weight: 600;
 }
 
 .desktopMenu {
@@ -110,8 +40,8 @@
   align-items: center;
   padding: 0.25rem;
   border-bottom: 2px solid transparent;
+  font-family: "Inter Medium";
   font-size: 1rem;
-  font-weight: 500;
   color: #6b7280;
   transition: all 0.2s;
 
@@ -171,12 +101,13 @@
 }
 
 .userName {
+  font-family: "Inter SB";
   font-size: 1rem;
   line-height: normal;
   text-align: center;
 
   @media (min-width: 1000px) {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 }
 
@@ -210,8 +141,7 @@
   display: block;
   padding: 0.5rem 0.75rem;
   border-left: 4px solid transparent;
-  font-size: 1rem;
-  font-weight: 500;
+  font-family: "Inter Medium";
   color: #6b7280;
 
   &:hover {
