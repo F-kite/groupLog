@@ -69,8 +69,7 @@ app.use(
 );
 
 app.listen(PORT, (error) => {
-  console.log("Starting the server..");
-  error ? console.log(error) : console.log(`Listening port ${PORT}`);
+  error ? console.log(error) : console.log(`THE SERVER IS RUNNING`);
 });
 
 app.get("/ping", (req, res) => {

@@ -1,6 +1,4 @@
-import { createContext } from "react";
-
-export interface Students {
+export type StudentsProps = {
   student_id: number;
   subgroup: number;
   student_surname: string;
@@ -11,6 +9,4 @@ export interface Students {
   student_tgid: string;
   enrollment_year: number;
   marks: { [key: string]: "Б" | "УП" | "Н" };
-}
-
-export const StudentContext = createContext<Students[] | null>(null);
+};

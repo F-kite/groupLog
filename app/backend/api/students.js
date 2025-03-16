@@ -60,13 +60,13 @@ const getById = async (req, res) => {
 
 // Получить всех студентов по группе
 const getByGroup = async (req, res) => {
-  const data = req.params.group;
+  const groupName = req.params.group;
 
   // Существует ли группа
   const { data: group, error: groupError } = await supabase
     .from("groups")
     .select("group_id")
-    .eq("group_name", data)
+    .eq("group_name", groupName)
     .single();
 
   if (groupError) {

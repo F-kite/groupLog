@@ -1,5 +1,6 @@
-import { useContext, useState } from "react";
-import { StudentContext } from "@/hooks/StudentContext";
+import { useContext, useState, useEffect } from "react";
+import { MyContext } from "@/hooks/MyContextProvider";
+import studentApi from "@/utils/api/students";
 import {
   Table,
   TableBody,
@@ -28,11 +29,29 @@ import {
 import styles from "./styles.module.scss";
 
 export default function AttendanceTable() {
-  const students = useContext(StudentContext);
-
-  if (!students) {
-    return <div>Загрузка...</div>;
+  const context = useContext(MyContext);
+  
+  if (!context) {
+    throw new Error("MyContext must be used within a MyProvider");
   }
+  const { students, setStudents } = context;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Загружаем студентов
+        const studentsResponse = await studentApi.getStudentsByGroup("ИСт-221");
+        if (studentsResponse.error) {
+          throw new Error(studentsResponse.error);
+        }
+        setStudents(studentsResponse);
+      } catch (error: any) {
+        console.error(error.message);
+      }
+    };
+
+    fetchData();
+  }, [setStudents]);
 
   const lessons = Array.from({ length: 6 }, (_, i) => i + 1); // Номера пар (1-6)
 

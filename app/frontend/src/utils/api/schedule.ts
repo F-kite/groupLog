@@ -1,13 +1,13 @@
-const serverStudentsURL = "http://localhost:3001/api/students";
+const serverScheduleURL = "http://localhost:3001/api/schedule";
 
-async function getStudentsByGroup(group: string) {
+async function getWeekSchedule(group: string, week: number) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
     }, 5000);
 
-    const response = await fetch(`${serverStudentsURL}/groups/${group}`, {
+    const response = await fetch(`${serverScheduleURL}/${group}/${week}`, {
       method: "GET",
       signal: controller.signal,
     });
@@ -34,8 +34,8 @@ async function getStudentsByGroup(group: string) {
     throw new Error(error.message);
   }
 }
-const studentApi = {
-  getStudentsByGroup,
+const scheduleApi = {
+    getWeekSchedule,
 };
 
-export default studentApi;
+export default scheduleApi;

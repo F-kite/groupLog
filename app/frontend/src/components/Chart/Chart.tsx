@@ -12,7 +12,8 @@ import {
 import styles from "./styles.module.scss";
 import { Button } from "../ui/button";
 
-import { AttendanceStatisticsProps, attendanceStatistics } from "@/store/data";
+import { attendanceStatistics } from "@/store/data";
+import { AttendanceStatisticsProps } from "@/types/statistics";
 
 const {
   dailyStatistics,

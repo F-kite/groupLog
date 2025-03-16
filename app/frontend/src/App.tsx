@@ -10,8 +10,7 @@ import ErrorServerUnavailable from "./pages/ErrorPages/503Page.tsx";
 import TestingPage from "./pages/TestingPage/TestingPage.tsx";
 
 import ProtectedRoute from "../middleware.tsx";
-import { StudentContext, Students } from "@/hooks/StudentContext.ts";
-import studentApi from "./utils/api/students.ts";
+import { MyContextProvider } from "./hooks/MyContextProvider.tsx";
 import { checkServer } from "./utils/api/index.ts";
 import "./App.css";
 
@@ -20,11 +19,18 @@ import "./App.css";
   Сделать хеширование паролей при регистрации / авторизации
    */
 }
+interface InfoProps {
+  group: string;
+  week: number;
+}
+
+const Info: InfoProps = {
+  group: "ИСт-221",
+  week: 10,
+};
 
 export default function App() {
   const [isServerDown, setIsServerDown] = useState<boolean>();
-  const [students, setStudents] = useState<Students[]>([]);
-  const [group, setGroup] = useState("ИСт-221");
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -47,27 +53,9 @@ export default function App() {
 
     const intervalId = setInterval(performCheck, 20 * 1000);
 
-    if (!isServerDown) {
-      const fetchStudents = async (group: string) => {
-        try {
-          setLoading(true);
-          const response = await studentApi.getStudentsByGroup(group);
-          if (response.error) {
-            throw new Error(response.error);
-          }
-          setStudents(response);
-          console.log(students);
-        } catch (error: any) {
-          console.error(error.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchStudents(group);
-    }
     // Очистка интервала при размонтировании компонента
     return () => clearInterval(intervalId);
-  }, [isServerDown, group]);
+  }, [isServerDown]);
 
   //Рендер страницы (503), если сервер недоступен
   if (isServerDown) {
@@ -81,8 +69,8 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      <StudentContext.Provider value={students}>
+    <MyContextProvider>
+      <BrowserRouter>
         <Routes>
           <Route path="*" element={<ErrorPageNotFound />} />
           <Route path="/login" element={<LoginPage />} />
@@ -109,7 +97,7 @@ export default function App() {
             }
           />
         </Routes>
-      </StudentContext.Provider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </MyContextProvider>
   );
 }

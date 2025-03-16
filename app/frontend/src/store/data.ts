@@ -1,44 +1,6 @@
-export type UserProps = {
-  role: string;
-  userName: string;
-  userEmail: string;
-};
-
-export type DailyScheduleLessonProps = {
-  timeStart: string;
-  timeEnd: string;
-  subjectName: string;
-  subjectType: string;
-  teacherName: string;
-  roomNumber: string;
-};
-export type DailyScheduleProps = {
-  dayOfWeek: string;
-  date: string;
-  isHoliday: boolean;
-  lessons: DailyScheduleLessonProps[];
-};
-
-export type DailyStatisticsProps = {
-  lesson: string;
-  time: string;
-  attendance: number;
-};
-export type WeeklyStatisticsProps = {
-  date: string;
-  day: string;
-  attendance: number;
-};
-export type MonthlyStatisticsProps = {
-  fullMonth: string;
-  shortMonth: string;
-  attendance: number;
-};
-export type AttendanceStatisticsProps = {
-  dailyStatistics: DailyStatisticsProps[];
-  weeklyStatistics: WeeklyStatisticsProps[];
-  monthlyStatistics: MonthlyStatisticsProps[];
-};
+import { UserProps } from "@/types/user";
+import { DailyScheduleProps } from "@/types/schedule";
+import { AttendanceStatisticsProps } from "@/types/statistics";
 
 export const UserInfo: UserProps = {
   role: "student",
@@ -156,4 +118,13 @@ export const communicationWithDeveloper = [
     href: "mailto:workhub00@mail.ru",
     icon: "/icon/mail_icon.svg",
   },
+];
+
+export const lessonsTimeNumber = [
+  { pairNumber: 1, timeStart: "09:00:00", timeEnd: "10:30:00" },
+  { pairNumber: 2, timeStart: "10:50:00", timeEnd: "12:20:00" },
+  { pairNumber: 3, timeStart: "13:20:00", timeEnd: "14:50:00" },
+  { pairNumber: 4, timeStart: "15:10:00", timeEnd: "16:40:00" },
+  { pairNumber: 5, timeStart: "17:00:00", timeEnd: "18:30:00" },
+  { pairNumber: 6, timeStart: "18:50:00", timeEnd: "20:20:00" },
 ];
