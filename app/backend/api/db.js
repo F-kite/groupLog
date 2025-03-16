@@ -1,7 +1,7 @@
 import supabase from "../supabase/index.js";
 
 // метод для получения данных из всех таблиц
-async function fetchAllData() {
+async function GetAllData() {
   try {
     // пользователи
     const { data: users, error: usersError } = await supabase
@@ -113,5 +113,5 @@ const refreshAuthToken = async (req, res) => {
   res.status(200).json({ message: "Token refreshed successfully" });
 };
 
-const dbApi = { fetchAllData, refreshAuthToken };
+const dbApi = { GetAllData, refreshAuthToken };
 export default dbApi;

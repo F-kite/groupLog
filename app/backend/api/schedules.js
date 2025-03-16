@@ -332,17 +332,20 @@ const getWeeklySchedule = async (req, res) => {
 
     // Преобразование данных
     const schedule = {
+      weekId: weekData.week_schedule_id,
       weekNumber: weekData.week_schedule_number,
       groupName: groupData.group_name,
       startDate: start_date,
       endDate: end_date,
       days: daysData.map((day) => ({
+        dayId: day.days_schedule.day_schedule_id,
         dayOfWeek: day.days_schedule.day_of_week,
         date: day.days_schedule.date,
         isHoliday: day.days_schedule.is_holiday,
         lessons: day.days_schedule.lessons_days_schedule.map((lessonEntry) => {
           const lesson = lessonEntry.lessons_schedule;
           return {
+            lessonId: lesson.lesson_schedule_id,
             timeStart: lesson.time_start,
             timeEnd: lesson.time_end,
             subjectName: lesson.subjects.subject_name,
@@ -440,12 +443,14 @@ const getDailySchedule = async (req, res) => {
     const { days_schedule: daySchedule } = dailySchedule;
 
     const schedule = {
+      dayId: daySchedule.day_schedule_id,
       dayOfWeek: daySchedule.day_of_week,
       date: daySchedule.date,
       isHoliday: daySchedule.is_holiday,
       lessons: daySchedule.lessons_days_schedule.map((lessonEntry) => {
         const lesson = lessonEntry.lessons_schedule;
         return {
+          lessonId: lesson.lesson_schedule_id,
           timeStart: lesson.time_start,
           timeEnd: lesson.time_end,
           subjectName: lesson.subjects.subject_name,

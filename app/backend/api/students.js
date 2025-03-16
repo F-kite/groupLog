@@ -61,7 +61,7 @@ const getById = async (req, res) => {
 // Получить всех студентов по группе
 const getByGroup = async (req, res) => {
   const data = req.params.group;
-  // console.log(data);
+
   // Существует ли группа
   const { data: group, error: groupError } = await supabase
     .from("groups")
@@ -96,6 +96,83 @@ const getByGroup = async (req, res) => {
   } else if (error) {
     console.error(error.message);
     return res.status(500).json({ error: "Error to fetch students" });
+  } else {
+    return res.status(200).json(students);
+  }
+};
+
+// Получить всех студентов по группе
+const getStudentsAndAttendancesByGroup = async (req, res) => {
+  const data = req.params.group;
+
+  // Существует ли группа
+  const { data: group, error: groupError } = await supabase
+    .from("groups")
+    .select("group_id")
+    .eq("group_name", data)
+    .single();
+
+  if (groupError) {
+    return res.status(400).json({ error: "Invalid group. Group not found." });
+  }
+
+  // Получение текущей даты
+  const today = new Date().toISOString().split("T")[0]; // Формат: YYYY-MM-DD
+
+  //Получить ID дня для текущей даты
+  const { data: dayIds, error: dayError } = await supabase
+    .from("days_schedule")
+    .select("day_schedule_id")
+    .eq("date", today)
+    .single();
+
+  console.log(dayIds);
+
+  if (dayError || !dayIds || dayIds.length === 0) {
+    return res
+      .status(404)
+      .json({ error: "No schedule found for the specified date" });
+  }
+
+  const { data: students, error: queryError } = await supabase
+    .from("students")
+    .select(
+      `
+    student_id,
+    subgroup,
+    student_name,
+    student_surname,
+    student_patronymic,
+    attendance_logs (
+      lessons_schedule (
+        lesson_schedule_id,
+        subject_id,
+        room_id,
+        teacher_id,
+        time_start,
+        time_end
+      ),
+      days_schedule(
+        day_schedule_id,
+        date,
+        is_holiday
+      ),
+      attendance_status
+    )
+      `
+    )
+    .eq("group_id", group.group_id)
+    //.in("days_schedule.day_schedule_id", toString(dayIds.day_schedule_id)) // Фильтруем по ID дней
+    .order("student_surname", { ascending: true });
+
+  if (queryError) {
+    console.error(queryError.message);
+    return res.status(500).json({ error: "Failed to fetch data" });
+  }
+
+  if (!students || students.length === 0) {
+    console.log(students);
+    return res.status(404).json({ error: "Students not found" });
   } else {
     return res.status(200).json(students);
   }
@@ -286,6 +363,13 @@ const remove = async (req, res) => {
   return res.status(204).end();
 };
 
-const studentsApi = { getAll, getById, getByGroup, create, update, remove };
+const studentsApi = {
+  getAll,
+  getById,
+  getByGroup,
+  create,
+  update,
+  remove,
+};
 
 export default studentsApi;

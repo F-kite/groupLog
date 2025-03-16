@@ -7,7 +7,7 @@ async function getStudentsByGroup(group: string) {
       controller.abort();
     }, 5000);
 
-    const response = await fetch(`${serverStudentsURL}/group/${group}`, {
+    const response = await fetch(`${serverStudentsURL}/groups/${group}`, {
       method: "GET",
       signal: controller.signal,
     });

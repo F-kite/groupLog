@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./app/login/page.tsx";
 import RegisterPage from "./app/register/page.tsx";
 import HomePage from "./components/HomePage/HomePage.tsx";
@@ -56,6 +56,7 @@ export default function App() {
             throw new Error(response.error);
           }
           setStudents(response);
+          console.log(students);
         } catch (error: any) {
           console.error(error.message);
         } finally {
@@ -68,7 +69,7 @@ export default function App() {
     return () => clearInterval(intervalId);
   }, [isServerDown, group]);
 
-  //Рендер страницы, если сервер недоступен
+  //Рендер страницы (503), если сервер недоступен
   if (isServerDown) {
     return (
       <BrowserRouter>

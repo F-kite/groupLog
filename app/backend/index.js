@@ -90,79 +90,81 @@ post - создание со статусом 201 после успешного 
 put - обновление записи
 */
 
-app.get("/api/parser/:group/:week", scheduleApi.getWeeklySchedule);
-app.get("/api/parser/:group/:week/:day", scheduleApi.getDailySchedule);
-app.post("/api/parser/:group/:week", scheduleApi.createSchedule);
+app.get("/api/schedule/:group/:week", scheduleApi.getWeeklySchedule);
+app.get("/api/schedule/:group/:week/:day", scheduleApi.getDailySchedule);
+app.post("/api/schedule/:group/:week", scheduleApi.createSchedule);
 
-app.get("api/admin/user", userApi.getByEmail);
-app.delete("api/admin/user", validate(userDeleteSchema), userApi.remove);
+app.get("api/admin/users", userApi.getByEmail);
+app.delete("api/admin/users", validate(userDeleteSchema), userApi.remove);
 
 app.post(
   "/api/user/registration",
   validate(userRegisterSchema),
   userApi.registration
 );
-app.post("/api/user/login", validate(userLoginSchema), userApi.login);
-app.post("/api/user/logout", userApi.logout);
-app.put("/api/user/update", validate(userSchemaToUpdate), userApi.update);
-app.post("/api/user/id/:id/avatar", userApi.uploadAvatar);
+app.post("/api/users/login", validate(userLoginSchema), userApi.login);
+app.post("/api/users/logout", userApi.logout);
+app.put("/api/users/update", validate(userSchemaToUpdate), userApi.update);
+app.post("/api/users/id/:id/avatar", userApi.uploadAvatar);
 
 // Группы
-app.get("/api/group", groupApi.getAll);
-app.get("/api/group/id/:id", groupApi.getById);
-app.post("/api/group", validate(groupSchemaToCreate), groupApi.create);
-app.put("/api/group/id/:id", validate(groupSchemaToUpdate), groupApi.update);
-app.delete("/api/group/id/:id", groupApi.remove);
+app.get("/api/groups", groupApi.getAll);
+app.get("/api/groups/id/:id", groupApi.getById);
+app.post("/api/groups", validate(groupSchemaToCreate), groupApi.create);
+app.put("/api/groups/id/:id", validate(groupSchemaToUpdate), groupApi.update);
+app.delete("/api/groups/id/:id", groupApi.remove);
 
 // Студенты
-app.get("/api/student", studentsApi.getAll);
-app.get("/api/student/id/:id", studentsApi.getById);
+app.get("/api/students", studentsApi.getAll);
+app.get("/api/students/id/:id", studentsApi.getById);
 app.post(
-  "/api/student",
+  "/api/students",
   validate(studentsArraySchemaToCreate),
   studentsApi.create
 );
-app.get("/api/student/group/:group", studentsApi.getByGroup);
+app.get("/api/students/groups/:group", studentsApi.getByGroup);
 app.put(
-  "/api/student/:group/:id",
+  "/api/students/:groups/:id",
   validate(studentSchemaToUpdate),
   studentsApi.update
 );
-app.delete("/api/student/id/:id", studentsApi.remove);
+app.delete("/api/students/id/:id", studentsApi.remove);
 
 // Преподаватели
-app.get("/api/teacher", teacherApi.getAll);
-app.get("/api/teacher/id/:id", teacherApi.getById);
-app.post("/api/teacher", validate(teacherSchemaToCreate), teacherApi.create);
+app.get("/api/teachers", teacherApi.getAll);
+app.get("/api/teachers/id/:id", teacherApi.getById);
+app.post("/api/teachers", validate(teacherSchemaToCreate), teacherApi.create);
 app.put(
-  "/api/teacher/id/:id",
+  "/api/teachers/id/:id",
   validate(teacherSchemaToUpdate),
   teacherApi.update
 );
-app.delete("/api/teacher/id/:id", teacherApi.remove);
+app.delete("/api/teachers/id/:id", teacherApi.remove);
 
 // Предметы
-app.get("/api/subject", subjectsApi.getAll);
-app.get("/api/subject/id/:id", subjectsApi.getById);
-app.post("/api/subject", validate(subjectSchemaToCreate), subjectsApi.create);
+app.get("/api/subjects", subjectsApi.getAll);
+app.get("/api/subjects/id/:id", subjectsApi.getById);
+app.post("/api/subjects", validate(subjectSchemaToCreate), subjectsApi.create);
 app.put(
-  "/api/subject/id/:id",
+  "/api/subjects/id/:id",
   validate(subjectSchemaToUpdate),
   subjectsApi.update
 );
-app.delete("/api/subject/id/:id", subjectsApi.remove);
+app.delete("/api/subjects/id/:id", subjectsApi.remove);
 
 // Посещаемость
-app.get("/api/attendance", attendanceApi.getAll);
-app.get("/api/attendance/id/:id", attendanceApi.getById);
+app.get("/api/attendances", attendanceApi.getAll);
+app.get("/api/attendances/id/:id", attendanceApi.getById);
+app.get("/api/attendances/groups/:group", attendanceApi.getByGroup);
+app.get("/api/attendances/students/:student", attendanceApi.getByStudent);
 app.post(
-  "/api/attendance",
+  "/api/attendances",
   validate(attendanceSchemaToCreate),
   attendanceApi.create
 );
 app.put(
-  "/api/attendance/id/:id",
+  "/api/attendances/id/:id",
   validate(attendanceSchemaToUpdate),
   attendanceApi.update
 );
-app.delete("/api/attendance/id/:id", attendanceApi.remove);
+app.delete("/api/attendances/id/:id", attendanceApi.remove);
