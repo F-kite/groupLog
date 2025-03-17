@@ -13,7 +13,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar1 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -95,7 +95,12 @@ export default function Calendar({
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
-    console.log(`Selected ${date}`);
+    let day = date.getDate();
+    let month = date.getMonth() + 1;
+    let year = date.getFullYear();
+
+    let formattedDate = year + "-" + month + "-" + day;
+    console.log(`Selected ${formattedDate}`);
   };
 
   const handleMonthChange = (monthIndex: string) => {
@@ -154,10 +159,9 @@ export default function Calendar({
           onClick={goToToday}
           variant="outline"
           size="sm"
-          className="flex items-center"
+          className="flex items-center ml-1"
         >
-          <CalendarDays className="h-4 w-4 mr-2" />
-          Сегодня
+          <Calendar1 className="h-4 w-4" />
         </Button>
       </div>
       <div

@@ -13,7 +13,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { dailySchedule } from "@/store/data";
 
 import { DailyScheduleLessonProps, DailyScheduleProps } from "@/types/schedule";
 import { lessonsTimeNumber } from "@/store/data";
@@ -57,18 +56,6 @@ export default function Slider(): JSX.Element {
   // console.log("dailySchedule:", dailySchedule.lessons);
   // console.log("DAYS:", DAYS[0]?.lessons);
 
-  let groupedLessons: GroupedLessons = {};
-  if (DAYS && DAYS.length > 0 && DAYS[0].lessons) {
-    groupedLessons = groupLessonsByTime(DAYS[0].lessons);
-  }
-  // else if (!DAYS || DAYS.length === 0 || currentDay >= DAYS.length) {
-  //   console.debug("Сегодня воскресенье или нет данных о расписании");
-  //   return <p>Сегодня выходной день. Расписание недоступно.</p>;
-  // }
-  else {
-    console.log("Нет данных о расписании для текущего дня.");
-  }
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -88,6 +75,17 @@ export default function Slider(): JSX.Element {
 
     fetchData();
   }, [setWeekSchedule]);
+
+  let groupedLessons: GroupedLessons = {};
+
+  if (DAYS && DAYS.length > 0 && DAYS[currentDay].lessons) {
+    groupedLessons = groupLessonsByTime(DAYS[currentDay].lessons);
+  } else if (!DAYS || DAYS.length === 0 || currentDay >= DAYS.length) {
+    console.debug("Нет данных о расписании");
+    return <p>Расписание недоступно</p>;
+  } else {
+    console.error("Нет данных о расписании для текущего дня.");
+  }
 
   return (
     <div className={styles.sliderWrapper}>
