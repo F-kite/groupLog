@@ -1,0 +1,46 @@
+.mainContainer {
+  justify-items: center;
+
+  .infoGridContainer {
+    width: 70%;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: repeat(2, 20rem);
+    grid-template-areas:
+      "slider slider"
+      "chart calendar";
+    gap: 1rem;
+    place-items: stretch stretch;
+
+    .gridElement {
+      background-color: rgb(255, 255, 255);
+      border-radius: 15px;
+      border: 0.15rem solid rgb(139, 139, 140);
+      padding: 0 0.5rem;
+      justify-items: center;
+      align-content: center;
+      min-height: 20rem;
+    }
+
+    .slider {
+      grid-column: slider;
+    }
+
+    .chart {
+      grid-column: chart;
+      padding: 0.5rem;
+    }
+
+    .calendar {
+      grid-column: calendar;
+    }
+
+    @media (max-width: 960px) {
+      grid-template-columns: 2fr;
+      grid-template-areas:
+        "slider"
+        "calendar"
+        "chart";
+    }
+  }
+}

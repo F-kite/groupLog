@@ -1,7 +1,7 @@
 import supabase from "../supabase/index.js";
 
 // метод для получения данных из всех таблиц
-async function fetchAllData() {
+async function GetAllData() {
   try {
     // пользователи
     const { data: users, error: usersError } = await supabase
@@ -25,12 +25,12 @@ async function fetchAllData() {
 
     // расписание на день
     const { data: dailyschedule, error: dailyscheduleError } = await supabase
-      .from("dailyschedule")
+      .from("days_schedule")
       .select("*");
 
     // расписание на неделю
     const { data: weeklyschedule, error: weeklyscheduleError } = await supabase
-      .from("weeklyschedule")
+      .from("weeks_schedule")
       .select("*");
 
     // предметы
@@ -38,24 +38,38 @@ async function fetchAllData() {
       .from("subjects")
       .select("*");
 
+    // расписание одной пары
+    const { data: lessons, error: lessonsError } = await supabase
+      .from("lesssons_schedule")
+      .select("*");
+
     usersError
       ? console.error("Ошибка получения пользователей:", usersError)
       : null;
     studentsError
-      ? console.error("Ошибка получения студентов:", usersError)
+      ? console.error("Ошибка получения студентов:", studentsError)
       : null;
-    groupsError ? console.error("Ошибка получения групп:", usersError) : null;
+    groupsError ? console.error("Ошибка получения групп:", groupsError) : null;
     teachersError
-      ? console.error("Ошибка получения учителей:", usersError)
+      ? console.error("Ошибка получения учителей:", teachersError)
       : null;
     dailyscheduleError
-      ? console.error("Ошибка получения расписания на день:", usersError)
+      ? console.error(
+          "Ошибка получения расписания на день:",
+          dailyscheduleError
+        )
       : null;
     weeklyscheduleError
-      ? console.error("Ошибка получения расписания на неделю:", usersError)
+      ? console.error(
+          "Ошибка получения расписания на неделю:",
+          weeklyscheduleError
+        )
       : null;
     subjectsError
-      ? console.error("Ошибка получения предметов:", usersError)
+      ? console.error("Ошибка получения предметов:", subjectsError)
+      : null;
+    lessonsError
+      ? console.error("Ошибка получения расписания одной пары:", lessonsError)
       : null;
 
     return {
@@ -66,11 +80,38 @@ async function fetchAllData() {
       dailyschedule,
       weeklyschedule,
       subjects,
+      lessons,
     };
   } catch (error) {
     console.error(error);
   }
 }
 
-const dbApi = { fetchAllData };
+const refreshAuthToken = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: "No refresh token provided" });
+  }
+
+  const { data, error } = await supabase.auth.refreshSession({
+    refresh_token: refreshToken,
+  });
+
+  if (error) {
+    return res.status(401).json({ message: "Failed to refresh token" });
+  }
+
+  // Обновляем токен
+  res.cookie("authToken", data.session.access_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 1000, // 1 час
+  });
+
+  res.status(200).json({ message: "Token refreshed successfully" });
+};
+
+const dbApi = { GetAllData, refreshAuthToken };
 export default dbApi;

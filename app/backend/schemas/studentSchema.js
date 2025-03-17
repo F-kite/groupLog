@@ -1,7 +1,9 @@
 import Joi from "joi";
 
 export const studentSchemaToCreate = Joi.object({
-  group_id: Joi.number().integer().required(),
+  group_name: Joi.string()
+    .pattern(/^[А-Яа-я]{3,7}-\d{3}$/)
+    .required(),
   subgroup: Joi.number().integer().optional().valid(1, 2).messages({
     "string.valid": "Значение подгруппы может быть в диапозоне 1-2",
   }),
@@ -20,7 +22,7 @@ export const studentSchemaToCreate = Joi.object({
     .min(2)
     .max(30)
     .required()
-    .pattern(/^[А-Яа-яёЁ]+$/)
+    .pattern(/^[А-Яа-яёЁ-]+$/)
     .messages({
       "string.empty": "Фамилия не может быть пустой",
       "string.min": "Фамилия должна содержать минимум 2 символа",
@@ -56,10 +58,23 @@ export const studentSchemaToCreate = Joi.object({
     .messages({
       "string.pattern.base": "Неверный формат telegram ID, пример: @groupLog",
     }),
+  enrollment_year: Joi.number().integer().required(),
 });
 
+// Схема для массива студентов
+export const studentsArraySchemaToCreate = Joi.array()
+  .items(studentSchemaToCreate)
+  .min(1)
+  .required()
+  .messages({
+    "array.min": "Массив должен содержать хотя бы одного студента",
+    "array.base": "Ожидался массив студентов",
+  });
+
 export const studentSchemaToUpdate = Joi.object({
-  group_id: Joi.number().integer().optional(),
+  group_name: Joi.string()
+    .pattern(/^[А-Яа-я]{3,7}-\d{3}$/)
+    .optional(),
   subgroup: Joi.number().integer().optional().valid(1, 2).messages({
     "string.valid": "Значение подгруппы может быть в диапозоне 1-2",
   }),
@@ -67,7 +82,7 @@ export const studentSchemaToUpdate = Joi.object({
     .min(2)
     .max(30)
     .optional()
-    .pattern(/^[А-Яа-яёЁ]+$/)
+    .pattern(/^[А-Яа-яёЁ-]+$/)
     .messages({
       "string.empty": "Имя не может быть пустым",
       "string.min": "Имя должно содержать минимум 2 символа",

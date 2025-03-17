@@ -1,16 +1,5 @@
 import Joi from "joi";
 
-// export const userRegisterSchema = Joi.object({
-//   user_name: Joi.string().min(4).max(15).required(),
-//   user_email: Joi.string()
-//     .email({ minDomainSegments: 2, tlds: { allow: ["com", "net", "ru"] } })
-//     .required(),
-//   user_password: Joi.string().required(),
-//   user_repeat_password: Joi.ref("user_password"),
-//   user_age: Joi.string().optional(),
-//   user_avatar_url: Joi.string().optional(),
-// });
-
 export const userRegisterSchema = Joi.object({
   name: Joi.string().min(4).max(15).required().messages({
     "string.empty": "Имя пользователя не может быть пустым",
@@ -41,10 +30,6 @@ export const userRegisterSchema = Joi.object({
       "string.pattern.base":
         "Пароль должен содержать хотя бы одну заглавную и строчную буквы, цифру и один спец. символ",
     }),
-
-  age: Joi.string().pattern(/^\d+$/).optional().messages({
-    "string.pattern.base": "Возраст должен быть числом",
-  }),
 
   avatar_url: Joi.string().uri().optional().messages({
     "string.uri": "Некорректный URL аватара",
@@ -92,27 +77,35 @@ export const userSchemaToUpdate = Joi.object({
         "Пароль должен содержать хотя бы одну заглавную и строчную буквы, цифру и один спец. символ",
     }),
 
-  age: Joi.string().pattern(/^\d+$/).optional().messages({
-    "string.pattern.base": "Возраст должен быть числом",
-  }),
-
   avatar_url: Joi.string().uri().optional().messages({
     "string.uri": "Некорректный URL аватара",
   }),
 });
 
-export const userLoginSchema = Joi.object({
-  email: Joi.string()
-    .email({
-      minDomainSegments: 2,
-      tlds: { allow: ["com", "net", "ru"] },
-    })
-    .required()
-    .messages({
-      "string.empty": "Email не может быть пустым",
-      "string.email": "Некорректный формат email",
-    }),
+export const emailSchema = Joi.string()
+  .email({
+    minDomainSegments: 2,
+    tlds: { allow: ["com", "net", "ru"] },
+  })
+  .messages({
+    "string.email": "Некорректный формат email",
+  });
 
+// Схема для логина
+export const usernameSchema = Joi.string()
+  .min(4)
+  .max(15)
+  .regex(/^[a-zA-Z0-9_-]+$/)
+  .messages({
+    "string.min": "Логин должен быть не менее 4 символов",
+    "string.max": "Логин должен быть не более 15 символов",
+    "string.pattern.base": "Логин может содержать только буквы, цифры, _ и -",
+  });
+
+export const userLoginSchema = Joi.object({
+  userLogin: Joi.alternatives().try(emailSchema, usernameSchema).messages({
+    "alternatives.match": "Введите корректный email или логин",
+  }),
   password: Joi.string()
     .min(6)
     .pattern(

@@ -1,0 +1,116 @@
+$accent-color: #d9d9da;
+$accent-text-color: #111827;
+$selected-color: rgb(86, 86, 86);
+$selected-text-color: white;
+$muted-color: #6b7280;
+$smallTextSize: 0.5rem;
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+}
+
+@mixin button-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.calendar {
+  margin: 0 auto;
+}
+
+.header {
+  @include flex-center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.monthYearSelector {
+  @include flex-center;
+  gap: 0.5rem;
+}
+
+.monthSelect {
+  width: 120px;
+}
+
+.yearDisplay {
+  font-weight: 600;
+}
+
+.calendarGrid {
+  display: grid;
+  gap: 0.25rem;
+  height: calc(100% - 3rem);
+
+  &.weekNumbers {
+    grid-template-columns: repeat(8, 1fr);
+  }
+
+  &.noWeekNumbers {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}
+
+.weekNumber,
+.dayOfWeek {
+  text-align: center;
+}
+
+.weekNumber {
+  color: $muted-color;
+  align-content: center;
+  // padding-top: 5px;
+}
+
+.dayOfWeek {
+  font-weight: 500;
+}
+
+.day {
+  @include button-reset;
+  @include flex-center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  border-radius: calc(var(--radius) - 2px);
+
+  &.outsideMonth {
+    color: $muted-color;
+    opacity: 0.5;
+  }
+
+  &.today {
+    background-color: $accent-color;
+    color: $accent-text-color;
+
+    // &:hover {
+    //   background-color: $accent-color;
+    //   color: $accent-text-color;
+    // }
+  }
+
+  &.selected {
+    background-color: $selected-color;
+    color: $selected-text-color;
+
+    // &:hover {
+    //   background-color: $selected-color;
+    //   color: $selected-text-color;
+    // }
+  }
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.medium {
+  font-size: 1rem;
+}
+
+.large {
+  font-size: 1.125rem;
+}

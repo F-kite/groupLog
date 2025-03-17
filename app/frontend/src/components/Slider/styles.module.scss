@@ -1,0 +1,154 @@
+.sliderWrapper {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.carouselContent {
+  margin-left: -0.5rem;
+  margin-right: 0.5rem;
+  user-select: none;
+}
+
+.carouselItem {
+  padding-left: 1.1rem;
+  @media (min-width: 480px) {
+    flex-basis: 26rem;
+  }
+  @media (min-width: 768px) {
+    flex-basis: 26rem;
+  }
+  @media (min-width: 1024px) {
+    flex-basis: 26rem;
+  }
+  @media (min-width: 1280px) {
+    flex-basis: 26rem;
+  }
+  @media (min-width: 1600px) {
+    flex-basis: 26rem;
+  }
+  @media (min-width: 1920px) {
+    flex-basis: 26rem;
+  }
+}
+
+.cardContent {
+  aspect-ratio: 1.4 /1;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+  padding: 0;
+  height: 100%;
+  border-radius: 0.75rem;
+  position: relative;
+  overflow: hidden;
+
+  .cardContentContainer {
+    width: 100%;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    padding: 0.5rem 1.2rem;
+    background-color: rgb(86, 86, 86);
+    position: absolute;
+    z-index: 1;
+  }
+
+  .bgCardImage {
+    margin-bottom: auto;
+    position: relative;
+    z-index: 0;
+  }
+}
+
+.subjectAndTeacherWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+
+  .subjectAndTeacher {
+    color: rgb(175, 175, 181);
+    margin-right: 10px;
+
+    .teacher {
+      margin-top: 10px;
+    }
+  }
+}
+
+.subject {
+  text-wrap: pretty;
+  line-height: normal;
+}
+
+.roomWrapper {
+  color: rgb(255, 255, 255);
+  align-content: center;
+  text-align: center;
+  .room {
+    width: 5rem;
+    background-color: rgb(150, 150, 150);
+    padding: 8px 15px;
+    border-radius: 10px;
+  }
+}
+
+.lessonNumberAndTimeWrapper {
+  width: 100%;
+  font-size: 1.05rem;
+  .lessonNumberAndTime {
+    display: flex;
+    justify-content: end;
+    margin-right: 1rem;
+    color: rgb(175, 175, 181);
+
+    .time {
+      margin-left: 10px;
+    }
+  }
+}
+
+.line {
+  width: 90%;
+  height: 1px;
+  background: rgba(56, 56, 58, 1);
+  border: 0px;
+  margin: auto;
+}
+
+.accordionItem {
+  color: rgb(175, 175, 181);
+  padding: 0 1rem;
+  transition: 0.1s;
+
+  &:hover {
+    background-color: rgb(77, 77, 77);
+    border-radius: 10px;
+  }
+
+  .active {
+    background-color: rgb(77, 77, 77);
+    border-radius: 10px;
+  }
+}
+
+.accordionContentList {
+  display: flex;
+  padding: 0 1rem;
+  justify-content: space-between;
+  font-size: 1.05rem;
+
+  .teacher {
+    align-content: center;
+  }
+
+  .room {
+    color: rgb(255, 255, 255);
+    align-content: center;
+    text-align: center;
+    background-color: rgb(150, 150, 150);
+    padding: 8px 15px;
+    border-radius: 10px;
+  }
+}
