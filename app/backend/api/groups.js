@@ -2,11 +2,11 @@ import supabase from "../supabase/index.js";
 
 // Получить все группы
 const getAll = async (req, res) => {
-  const { data: groups, error } = await supabase.from("groups").select(`
+  const { data: groups, error } = await supabase.from("group").select(`
     group_id,
-    group_name,
+    name,
     curator_id,
-    teachers (teacher_name, teacher_email)
+    teacher (name, email)
   `);
 
   if (error) {
@@ -26,13 +26,13 @@ const getAll = async (req, res) => {
 const getById = async (req, res) => {
   const { id } = req.params;
   const { data: group, error } = await supabase
-    .from("groups")
+    .from("group")
     .select(
       `
         group_id,
-        group_name,
+        name,
         curator_id,
-        teachers (teacher_name, teacher_email)
+        teacher (name, email)
       `
     )
     .eq("group_id", id)
@@ -48,11 +48,11 @@ const getById = async (req, res) => {
 
 // Добавить новую группу
 const create = async (req, res) => {
-  const { group_name, curator_id } = req.body;
+  const { name, curator_id } = req.body;
 
   // Существует ли преподаватель с указанным ID
   const { data: curator, error: curatorError } = await supabase
-    .from("teachers")
+    .from("teacher")
     .select("*")
     .eq("teacher_id", curator_id);
 
@@ -64,9 +64,9 @@ const create = async (req, res) => {
 
   //Существует ли группа с указанным именем
   const { data: group, error: groupError } = await supabase
-    .from("groups")
+    .from("group")
     .select("*")
-    .eq("group_name", group_name);
+    .eq("name", name);
 
   if (group.length !== 0) {
     return res.status(400).json({ error: "Group already exists" });
@@ -76,8 +76,8 @@ const create = async (req, res) => {
   }
 
   const { data, error } = await supabase
-    .from("groups")
-    .insert({ group_name, curator_id })
+    .from("group")
+    .insert({ name, curator_id })
     .select();
 
   if (error) {
@@ -91,11 +91,11 @@ const create = async (req, res) => {
 // Обновить данные группы
 const update = async (req, res) => {
   const { id } = req.params;
-  const { group_name, curator_id } = req.body;
+  const { name, curator_id } = req.body;
 
   //Существует ли данная группа
   const { data: group, error: groupError } = await supabase
-    .from("groups")
+    .from("group")
     .select("*")
     .eq("group_id", id)
     .single();
@@ -109,8 +109,7 @@ const update = async (req, res) => {
 
   //Данные для обновления
   const updateData = {};
-  if (group_name !== undefined || group_name !== group.group_name)
-    updateData.group_name = group_name;
+  if (name !== undefined || name !== group.name) updateData.name = name;
   if (curator_id !== undefined || curator_id !== group.curator_id)
     updateData.curator_id = curator_id;
 
@@ -120,7 +119,7 @@ const update = async (req, res) => {
   }
 
   const { data, error } = await supabase
-    .from("groups")
+    .from("group")
     .update(updateData)
     .eq("group_id", id)
     .select()
@@ -140,7 +139,7 @@ const remove = async (req, res) => {
 
   // Существует ли группа с указанным ID
   const { data: group, error: groupError } = await supabase
-    .from("groups")
+    .from("group")
     .select("*")
     .eq("group_id", id);
 
@@ -153,7 +152,7 @@ const remove = async (req, res) => {
     return res.status(500).json({ error: "Error to delete group" });
   }
 
-  const { error } = await supabase.from("groups").delete().eq("group_id", id);
+  const { error } = await supabase.from("group").delete().eq("group_id", id);
 
   if (error) {
     console.error(error.message);

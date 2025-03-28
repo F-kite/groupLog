@@ -34,7 +34,7 @@ export default function Calendar({
   height = "auto",
 }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const months = [
@@ -62,13 +62,13 @@ export default function Calendar({
   const weeks = [];
   let days = [];
   let day = startDate;
-  let weekNumber = getWeek(startDate, { weekStartsOn });
+  let weekNumber = getWeek(startDate, { weekStartsOn }) - 2;
 
   for (let i = 0; i < 42; i++) {
     if (i > 0 && i % 7 === 0) {
       weeks.push({ days, weekNumber });
       days = [];
-      weekNumber = getWeek(day, { weekStartsOn });
+      weekNumber = getWeek(day, { weekStartsOn }) - 2;
     }
     days.push(day);
     day = addDays(day, 1);
@@ -91,15 +91,18 @@ export default function Calendar({
     const today = new Date();
     setCurrentDate(today);
     setSelectedDate(today);
+    handleDateClick(today);
   };
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
     let day = date.getDate();
+    const strDay = day < 10 ? `0${day}` : `${day}`;
     let month = date.getMonth() + 1;
+    const strMonth = month < 10 ? `0${month}` : `${month}`;
     let year = date.getFullYear();
 
-    let formattedDate = year + "-" + month + "-" + day;
+    let formattedDate = year + "-" + strMonth + "-" + strDay;
     console.log(`Selected ${formattedDate}`);
   };
 
@@ -112,7 +115,6 @@ export default function Calendar({
     md: styles.medium,
     lg: styles.large,
   };
-
   return (
     <div className={cn(styles.calendar, className)} style={{ width, height }}>
       <div className={styles.header}>

@@ -2,7 +2,7 @@ import supabase from "../supabase/index.js";
 
 // Получить всех преподавателей
 const getAll = async (req, res) => {
-  const { data: teachers, error } = await supabase.from("teachers").select("*");
+  const { data: teachers, error } = await supabase.from("teacher").select("*");
 
   if (error) {
     console.error(error.message);
@@ -16,7 +16,7 @@ const getAll = async (req, res) => {
 const getById = async (req, res) => {
   const { id } = req.params;
   const { data: teacher, error } = await supabase
-    .from("teachers")
+    .from("teacher")
     .select("*")
     .eq("teacher_id", id)
     .single();
@@ -31,20 +31,20 @@ const getById = async (req, res) => {
 
 // Добавить нового преподавателя
 const create = async (req, res) => {
-  const { teacher_name, teacher_phone, teacher_email } = req.body;
+  const { name, phone, email } = req.body;
 
   const { data: checking_the_teacher } = await supabase
-    .from("teachers")
+    .from("teacher")
     .select("*")
-    .eq("teacher_name", teacher_name);
+    .eq("name", name);
 
   if (checking_the_teacher.length !== 0) {
     return res.status(400).json({ error: "Teacher already exists" });
   }
 
   const { data, error } = await supabase
-    .from("teachers")
-    .insert({ teacher_name, teacher_phone, teacher_email })
+    .from("teacher")
+    .insert({ name, phone, email })
     .select();
 
   if (error) {
@@ -58,10 +58,10 @@ const create = async (req, res) => {
 // Обновить данные преподавателя
 const update = async (req, res) => {
   const { id } = req.params;
-  const { teacher_name, teacher_phone, teacher_email } = req.body;
+  const { name, phone, email } = req.body;
   const { data, error } = await supabase
-    .from("teachers")
-    .update({ teacher_name, teacher_phone, teacher_email })
+    .from("teacher")
+    .update({ name, phone, email })
     .eq("teacher_id", id)
     .select()
     .single();
@@ -78,7 +78,7 @@ const update = async (req, res) => {
 const remove = async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase
-    .from("teachers")
+    .from("teacher")
     .delete()
     .eq("teacher_id", id);
 

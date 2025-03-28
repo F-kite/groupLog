@@ -10,9 +10,9 @@ const getByEmail = async (req, res) => {
   if (user) {
     try {
       const { data, error } = await supabase
-        .from("users")
+        .from("user")
         .select("*")
-        .eq("user_email", email)
+        .eq("email", email)
         .single();
 
       if (error) {
@@ -34,9 +34,9 @@ const registration = async (req, res) => {
   try {
     //Существует ли пользователь с такой почтой
     const { data: userEmail } = await supabase
-      .from("users")
+      .from("user")
       .select("*")
-      .eq("user_email", email)
+      .eq("email", email)
       .single();
 
     if (userEmail) {
@@ -46,9 +46,9 @@ const registration = async (req, res) => {
     }
     //Существует ли пользователь с таким именем
     const { data: userName } = await supabase
-      .from("users")
+      .from("user")
       .select("*")
-      .eq("user_name", name)
+      .eq("name", name)
       .single();
 
     if (userName) {
@@ -69,13 +69,13 @@ const registration = async (req, res) => {
     const user_avatar_url = additionalData.avatar || null;
 
     const profileData = {
-      user_name: name,
-      user_email: email,
-      user_avatar_url,
+      name: name,
+      email: email,
+      avatar_url,
     };
 
     const { data: profile, error: profileError } = await supabase
-      .from("users")
+      .from("user")
       .insert([{ ...profileData }]);
 
     if (profileError) {
@@ -101,14 +101,13 @@ const login = async (req, res) => {
     let email;
     const isEmail = emailSchema.validate(userLogin).error === undefined;
     const isUsername = usernameSchema.validate(userLogin).error === undefined;
-    console.debug(isEmail, isUsername)
     if (isEmail) {
       email = userLogin;
     } else if (isUsername) {
       const { data: userEmail, error: userError } = await supabase
-        .from("users")
-        .select("user_email")
-        .eq("user_name", userLogin)
+        .from("user")
+        .select("email")
+        .eq("name", userLogin)
         .limit(1)
         .single();
 
@@ -123,7 +122,7 @@ const login = async (req, res) => {
           .status(400)
           .json({ error: "Пользователя с таким логином не существует" });
       }
-      email = userEmail.user_email;
+      email = userEmail.email;
     }
 
     let { data, error } = await supabase.auth.signInWithPassword({
@@ -169,8 +168,8 @@ const logout = async (req, res) => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     return res.status(204).end();
-  } catch (e) {
-    throw e;
+  } catch (err) {
+    throw err;
   }
 };
 
@@ -181,14 +180,14 @@ const update = async (req, res) => {
   const { data } = req.body;
   try {
     const { data: _user, error } = await supabase
-      .from("users")
+      .from("user")
       .update(data)
       .match({ id: user.id })
       .single();
     if (error) throw error;
     return _user;
-  } catch (e) {
-    throw e;
+  } catch (err) {
+    throw err;
   }
 };
 
@@ -198,9 +197,9 @@ const remove = async (req, res) => {
 
   //Существует ли пользователь с таким email
   const { data: userCheck } = await supabase
-    .from("users")
+    .from("user")
     .select("*")
-    .eq("user_email", email)
+    .eq("email", email)
     .single();
 
   if (!userCheck) {
@@ -209,10 +208,7 @@ const remove = async (req, res) => {
       .json({ error: "Invalid email. User with this email not found." });
   }
 
-  const { error } = await supabase
-    .from("users")
-    .delete()
-    .eq("user_email", email);
+  const { error } = await supabase.from("user").delete().eq("email", email);
 
   if (error) {
     console.error(error.message);
@@ -259,7 +255,7 @@ const uploadAvatar = async (file) => {
     // обновляем данные пользователя -
     // записываем путь к аватару
     const { data: _user, error: _error } = await supabase
-      .from("users")
+      .from("user")
       .update({ user_avatar_url })
       .match({ id })
       .single();

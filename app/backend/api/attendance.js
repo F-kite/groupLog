@@ -1,16 +1,11 @@
 import supabase from "../supabase/index.js";
 
 const create = async (req, res) => {
-  const {
-    student_id,
-    lessons_schedule_id,
-    attendance_status,
-    day_schedule_id,
-  } = req.body;
+  const { student_id, lesson_schedule_id, status, day_schedule_id } = req.body;
 
   // Проверка существования студента
   const { data: student, error: studentError } = await supabase
-    .from("students")
+    .from("student")
     .select("student_id, group_id")
     .eq("student_id", student_id)
     .single();
@@ -21,9 +16,9 @@ const create = async (req, res) => {
 
   // Проверка существования занятия
   const { data: lesson, error: lessonError } = await supabase
-    .from("lessons_schedule")
+    .from("lesson_schedule")
     .select("lesson_schedule_id")
-    .eq("lesson_schedule_id", lessons_schedule_id)
+    .eq("lesson_schedule_id", lesson_schedule_id)
     .single();
 
   if (lessonError || !lesson) {
@@ -32,7 +27,7 @@ const create = async (req, res) => {
 
   // Проверка существования дня расписания
   const { data: day, error: dayError } = await supabase
-    .from("days_schedule")
+    .from("day_schedule")
     .select("day_schedule_id")
     .eq("day_schedule_id", day_schedule_id)
     .single();
@@ -43,7 +38,7 @@ const create = async (req, res) => {
 
   // Проверка существования недели расписания
   const { data: week, error: weekError } = await supabase
-    .from("weeks_schedule")
+    .from("week_schedule")
     .select("week_schedule_id")
     .eq("group_id", student.group_id)
     .single();
@@ -54,7 +49,7 @@ const create = async (req, res) => {
 
   // Проверка сопоставления дня с неделей
   const { data: checkDayWeek, error: checkDayWeekError } = await supabase
-    .from("days_weeks_schedule")
+    .from("day_week_schedule")
     .select("*")
     .eq("week_id", week.week_schedule_id)
     .eq("day_id", day_schedule_id)
@@ -66,10 +61,10 @@ const create = async (req, res) => {
 
   // Проверка сопоставления занятия с днем
   const { data: checkLesDay, error: checkLesDayError } = await supabase
-    .from("lessons_days_schedule")
+    .from("lesson_day_schedule")
     .select("*")
     .eq("day_id", day_schedule_id)
-    .eq("lesson_id", lessons_schedule_id)
+    .eq("lesson_id", lesson_schedule_id)
     .single();
 
   if (checkLesDayError || !checkLesDay) {
@@ -80,11 +75,11 @@ const create = async (req, res) => {
 
   // Добавление записи о посещаемости
   const { data, error } = await supabase
-    .from("attendance_logs")
+    .from("attendance_log")
     .insert({
       student_id,
-      lessons_schedule_id,
-      attendance_status,
+      lesson_schedule_id,
+      status,
       day_schedule_id,
     })
     .select();
@@ -98,25 +93,30 @@ const create = async (req, res) => {
 };
 
 const getAll = async (req, res) => {
-  const { data: logs, error } = await supabase.from("students").select(
-    `
+  const { data: logs, error } = await supabase
+    .from("student")
+    .select(
+      `
         student_id,
-        student_name,
-        student_surname,
-        attendance_logs (
+        group_id,
+        name,
+        surname,
+        attendance_log (
           attendance_log_id,
-          lessons_schedule (
+          lesson_schedule (
             subject_id,
-            subjects (subject_name,subject_type),
+            subject (name,type),
             time_start,
             time_end
           ),
-          days_schedule (day_of_week, date),
-          attendance_status
+          day_schedule (day_of_week, date),
+          status
         )
 
         `
-  );
+    )
+    .order("group_id", { ascending: true })
+    .order("surname", { ascending: true });
 
   if (error) {
     console.error(error.message);
@@ -134,18 +134,18 @@ const getById = async (req, res) => {
   const { id } = req.params;
 
   const { data: log, error } = await supabase
-    .from("attendance_logs")
+    .from("attendance_log")
     .select(
       `
-        students (student_name, student_surname),
-        lessons_schedule (
+        student (name, surname),
+        lesson_schedule (
           subject_id,
-          subjects (subject_name,subject_type),
+          subject (name,type),
           time_start,
           time_end
         ),
-        days_schedule (day_of_week, date),
-        attendance_status
+        day_schedule (day_of_week, date),
+        status
         `
     )
     .eq("attendance_log_id", id)
@@ -163,26 +163,28 @@ const getById = async (req, res) => {
   return res.status(200).json(log);
 };
 
+// не работает выборка по времени
 const getByGroup = async (req, res) => {
   const { group } = req.params;
   const { date } = req.query;
   let formattedDate;
+
   if (!date) {
     formattedDate = new Date().toISOString().split("T")[0]; // Формат: YYYY-MM-DD
-  } else if (date !== "all") {
+  } else if (date !== "no") {
     formattedDate = `${date.substring(0, 4)}-${date.substring(
       4,
       6
     )}-${date.substring(6, 8)}`;
+  } else if (date === "no") {
+    formattedDate = null;
   }
-
-  console.log(formattedDate);
 
   // Существует ли группа
   const { data: groupData, error: groupError } = await supabase
-    .from("groups")
+    .from("group")
     .select("group_id")
-    .eq("group_name", group)
+    .eq("name", group)
     .single();
 
   if (groupError || !groupData) {
@@ -191,34 +193,41 @@ const getByGroup = async (req, res) => {
 
   const groupId = groupData.group_id;
 
-  // Получение данных о студентах и их посещаемости
-
-  const { data: attendance, error } = await supabase
-    .from("students")
+  // Получаем данные о студентах и их посещаемости
+  let query = supabase
+    .from("student")
     .select(
       `
-        student_id,
-        student_name,
-        student_surname,
-        attendance_logs (
-          attendance_log_id,
-          lessons_schedule (
-            subject_id,
-            subjects (subject_name,subject_type),
-            time_start,
-            time_end
-          ),
-          days_schedule (day_of_week, date),
-          attendance_status
-        )
-      `
+          student_id,
+          name,
+          surname,
+          attendance_log (
+            attendance_log_id,
+            lesson_schedule (
+              subject_id,
+              subject (name, type),
+              time_start,
+              time_end
+            ),
+            day_schedule (day_of_week, date),
+            status
+          )
+        `
     )
     .eq("group_id", groupId);
-  // .eq("days_schedule.date", formattedDate);
 
+  if (formattedDate) {
+    query = query.filter(
+      "attendance_log.day_schedule.date",
+      "eq",
+      formattedDate
+    );
+  }
+
+  const { data: attendance, error } = await query;
   if (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to fetch attendance data" });
+    console.error("Error fetching attendance:", error);
+    return res.status(500).json({ error: error.message });
   }
 
   if (!attendance || attendance.length === 0) {
@@ -227,7 +236,15 @@ const getByGroup = async (req, res) => {
       .json({ error: "No students or attendance logs found" });
   }
 
-  return res.status(200).json(attendance);
+  //фильтрация данный
+  const filteredAttendance = attendance.map((student) => ({
+    ...student,
+    attendance_log: student.attendance_log.filter(
+      (log) => log.day_schedule !== null
+    ),
+  }));
+
+  return res.status(200).json(filteredAttendance);
 };
 
 const getByStudent = async (req, res) => {
@@ -236,7 +253,7 @@ const getByStudent = async (req, res) => {
   try {
     // Проверяем существование студента
     const { data: studentData, error: studentError } = await supabase
-      .from("students")
+      .from("student")
       .select("student_id")
       .eq("student_id", student)
       .single();
@@ -247,18 +264,18 @@ const getByStudent = async (req, res) => {
 
     // Получаем данные о посещаемости студента
     const { data: attendanceLogs, error: attendanceError } = await supabase
-      .from("attendance_logs")
+      .from("attendance_log")
       .select(
         `
         attendance_log_id,
-        lessons_schedule (
+        lesson_schedule (
           subject_id,
-          subjects (subject_name, subject_type),
+          subject (name, type),
           time_start,
           time_end
         ),
-        days_schedule (day_of_week, date),
-        attendance_status
+        day_schedule (day_of_week, date),
+        status
         `
       )
       .eq("student_id", student);
@@ -283,27 +300,28 @@ const getByStudent = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params;
-  const { attendance_status, day_schedule_id } = req.body;
+  const { status, day_schedule_id } = req.body;
 
   // Валидация входных данных
-  if (!attendance_status || !day_schedule_id) {
+  if (!status || !day_schedule_id) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
   // Проверка существования записи
   const { data: log, error: logError } = await supabase
-    .from("attendance_logs")
+    .from("attendance_log")
     .select("attendance_log_id")
     .eq("attendance_log_id", id)
     .single();
 
   if (logError || !log) {
+    console.error(logError);
     return res.status(400).json({ error: "Attendance log not found" });
   }
 
   // Проверка существования дня расписания
   const { data: day, error: dayError } = await supabase
-    .from("days_schedule")
+    .from("day_schedule")
     .select("day_schedule_id")
     .eq("day_schedule_id", day_schedule_id)
     .single();
@@ -314,8 +332,8 @@ const update = async (req, res) => {
 
   // Обновление записи
   const { data, error } = await supabase
-    .from("attendance_logs")
-    .update({ attendance_status, day_schedule_id })
+    .from("attendance_log")
+    .update({ status, day_schedule_id })
     .eq("attendance_log_id", id)
     .select();
 
@@ -332,7 +350,7 @@ const remove = async (req, res) => {
 
   // Проверка существования записи
   const { data: log, error: logError } = await supabase
-    .from("attendance_logs")
+    .from("attendance_log")
     .select("attendance_log_id")
     .eq("attendance_log_id", id);
 
@@ -342,7 +360,7 @@ const remove = async (req, res) => {
 
   // Удаление записи
   const { error } = await supabase
-    .from("attendance_logs")
+    .from("attendance_log")
     .delete()
     .eq("attendance_log_id", id);
 

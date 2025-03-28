@@ -2,16 +2,16 @@ import supabase from "../supabase/index.js";
 
 // Получить всех студентов
 const getAll = async (req, res) => {
-  const { data: students, error } = await supabase.from("students").select(`
+  const { data: students, error } = await supabase.from("student").select(`
     student_id,
-    groups (group_name),
+    group (name),
     subgroup,
-    student_name,
-    student_surname,
-    student_patronymic,
-    student_phone,
-    student_email,
-    student_tgid,
+    name,
+    surname,
+    patronymic,
+    phone,
+    email,
+    tgid,
     enrollment_year
   `);
 
@@ -32,18 +32,18 @@ const getAll = async (req, res) => {
 const getById = async (req, res) => {
   const { id } = req.params;
   const { data: student, error } = await supabase
-    .from("students")
+    .from("student")
     .select(
       `
     student_id,
-    groups (group_name),
+    group (name),
     subgroup,
-    student_name,
-    student_surname,
-    student_patronymic,
-    student_phone,
-    student_email,
-    student_tgid,
+    name,
+    surname,
+    patronymic,
+    phone,
+    email,
+    tgid,
     enrollment_year
       `
     )
@@ -64,9 +64,9 @@ const getByGroup = async (req, res) => {
 
   // Существует ли группа
   const { data: group, error: groupError } = await supabase
-    .from("groups")
+    .from("group")
     .select("group_id")
-    .eq("group_name", groupName)
+    .eq("name", groupName)
     .single();
 
   if (groupError) {
@@ -74,105 +74,28 @@ const getByGroup = async (req, res) => {
   }
 
   const { data: students, error } = await supabase
-    .from("students")
+    .from("student")
     .select(
       `
     student_id,
     subgroup,
-    student_name,
-    student_surname,
-    student_patronymic,
-    student_phone,
-    student_email,
-    student_tgid,
+    name,
+    surname,
+    patronymic,
+    phone,
+    email,
+    tgid,
     enrollment_year
       `
     )
     .eq("group_id", group.group_id)
-    .order("student_surname", { ascending: true });
+    .order("surname", { ascending: true });
 
   if (!students || students.length === 0) {
     return res.status(404).json({ error: "Students not found" });
   } else if (error) {
     console.error(error.message);
     return res.status(500).json({ error: "Error to fetch students" });
-  } else {
-    return res.status(200).json(students);
-  }
-};
-
-// Получить всех студентов по группе
-const getStudentsAndAttendancesByGroup = async (req, res) => {
-  const data = req.params.group;
-
-  // Существует ли группа
-  const { data: group, error: groupError } = await supabase
-    .from("groups")
-    .select("group_id")
-    .eq("group_name", data)
-    .single();
-
-  if (groupError) {
-    return res.status(400).json({ error: "Invalid group. Group not found." });
-  }
-
-  // Получение текущей даты
-  const today = new Date().toISOString().split("T")[0]; // Формат: YYYY-MM-DD
-
-  //Получить ID дня для текущей даты
-  const { data: dayIds, error: dayError } = await supabase
-    .from("days_schedule")
-    .select("day_schedule_id")
-    .eq("date", today)
-    .single();
-
-  console.log(dayIds);
-
-  if (dayError || !dayIds || dayIds.length === 0) {
-    return res
-      .status(404)
-      .json({ error: "No schedule found for the specified date" });
-  }
-
-  const { data: students, error: queryError } = await supabase
-    .from("students")
-    .select(
-      `
-    student_id,
-    subgroup,
-    student_name,
-    student_surname,
-    student_patronymic,
-    attendance_logs (
-      lessons_schedule (
-        lesson_schedule_id,
-        subject_id,
-        room_id,
-        teacher_id,
-        time_start,
-        time_end
-      ),
-      days_schedule(
-        day_schedule_id,
-        date,
-        is_holiday
-      ),
-      attendance_status
-    )
-      `
-    )
-    .eq("group_id", group.group_id)
-    //.in("days_schedule.day_schedule_id", toString(dayIds.day_schedule_id)) // Фильтруем по ID дней
-    .order("student_surname", { ascending: true });
-
-  if (queryError) {
-    console.error(queryError.message);
-    return res.status(500).json({ error: "Failed to fetch data" });
-  }
-
-  if (!students || students.length === 0) {
-    console.log(students);
-    return res.status(404).json({ error: "Students not found" });
   } else {
     return res.status(200).json(students);
   }
@@ -192,9 +115,9 @@ const create = async (req, res) => {
 
   // Существует ли группа с указанным именем
   const { data: group, error: groupError } = await supabase
-    .from("groups")
+    .from("group")
     .select("group_id")
-    .eq("group_name", group_name)
+    .eq("name", group_name)
     .single();
 
   if (groupError || group.length === 0) {
@@ -209,27 +132,27 @@ const create = async (req, res) => {
     const { group_name, ...rest } = student;
     return { ...rest, group_id };
   });
-
+  console.log(updatedStudentsData);
   const studentNames = updatedStudentsData.map((student) => ({
-    student_name: student.student_name,
-    student_surname: student.student_surname,
+    name: student.name,
+    surname: student.surname,
   }));
 
   // Проверяем, существуют ли уже такие студенты в базе данных
   const { data: existingStudents, error: studentError } = await supabase
-    .from("students")
-    .select("student_name, student_surname")
+    .from("student")
+    .select("name, surname")
     .in(
-      "student_name",
-      studentNames.map((s) => s.student_name)
+      "name",
+      studentNames.map((s) => s.name)
     )
     .in(
-      "student_surname",
-      studentNames.map((s) => s.student_surname)
+      "surname",
+      studentNames.map((s) => s.surname)
     );
 
   if (studentError) {
-    console.error(studentError.message);
+    console.error(studentError);
     return res
       .status(500)
       .json({ error: "Error checking for existing students." });
@@ -238,9 +161,9 @@ const create = async (req, res) => {
   // Находим дубликаты
   const duplicateStudents = existingStudents.filter((existingStudent) =>
     studentNames.some(
-      (name) =>
-        name.student_name === existingStudent.student_name &&
-        name.student_surname === existingStudent.student_surname
+      (el) =>
+        el.name === existingStudent.name &&
+        el.surname === existingStudent.surname
     )
   );
 
@@ -252,7 +175,7 @@ const create = async (req, res) => {
   }
 
   const { data, error } = await supabase
-    .from("students")
+    .from("student")
     .insert(updatedStudentsData)
     .select();
 
@@ -271,7 +194,7 @@ const update = async (req, res) => {
     const studentData = req.body;
     //Существует ли студент
     const { data: student, error: studentError } = await supabase
-      .from("students")
+      .from("student")
       .select("*")
       .eq("student_id", id)
       .single();
@@ -285,9 +208,9 @@ const update = async (req, res) => {
 
     // Существует ли группа с указанным именем
     const { data: chekGroup, error: chekGroupError } = await supabase
-      .from("groups")
+      .from("group")
       .select("group_id")
-      .eq("group_name", group)
+      .eq("name", group)
       .single();
 
     if (chekGroupError || chekGroup.length === 0) {
@@ -296,13 +219,14 @@ const update = async (req, res) => {
         .json({ error: "Invalid group name. Group not found." });
     }
 
-    if (studentData.group_name) {
+    if (studentData.name) {
       const group_id = chekGroup.group_id;
       // Удаляем group_name и добавляем group_id
-      const { group_name, ...rest } = studentData;
+      const { name, ...rest } = studentData;
       return { ...rest, group_id };
     }
 
+    console.log(studentData);
     //Данные для обновления
     const updateData = {};
     for (const key in studentData) {
@@ -316,9 +240,8 @@ const update = async (req, res) => {
       return res.status(400).json({ error: "No data provided for update" });
     }
 
-    console.log(updateData);
     const { data, error } = await supabase
-      .from("students")
+      .from("student")
       .update(updateData)
       .eq("student_id", id)
       .select()
@@ -339,7 +262,7 @@ const remove = async (req, res) => {
 
   // Существует ли с указанным ID
   const { data: student, error: studentError } = await supabase
-    .from("students")
+    .from("student")
     .select("*")
     .eq("student_id", id);
 
@@ -351,7 +274,7 @@ const remove = async (req, res) => {
   }
 
   const { error } = await supabase
-    .from("students")
+    .from("student")
     .delete()
     .eq("student_id", id);
 

@@ -30,7 +30,7 @@ import styles from "./styles.module.scss";
 
 export default function AttendanceTable() {
   const context = useContext(MyContext);
-  
+
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
@@ -45,7 +45,7 @@ export default function AttendanceTable() {
           throw new Error(studentsResponse.error);
         }
         setStudents(studentsResponse);
-      } catch (error: any) {
+      } catch (error) {
         console.error(error.message);
       }
     };
@@ -200,12 +200,12 @@ export default function AttendanceTable() {
                         )
                       }
                     />
-                    {student.student_surname} {student.student_name}
+                    {student.surname} {student.name}
                   </TableCell>
                 )}
                 {isSingleEditMode && (
                   <TableCell className={styles.studentCell}>
-                    {student.student_surname} {student.student_name}
+                    {student.surname} {student.name}
                   </TableCell>
                 )}
                 {lessons.map((lesson) => {

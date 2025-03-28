@@ -12,7 +12,7 @@ export async function checkServer() {
     if (error instanceof Error) {
       return { error: error.message };
     }
-    return { error: "Неизвестная ошибка" };
+    return { error: error };
   }
 }
 
@@ -22,8 +22,8 @@ export async function getProtectedRouteData() {
     return { message: response.data };
   } catch (error) {
     if (error instanceof Error) {
-      return { error: error };
+      return { error: error.message };
     }
-    return { error: "Неизвестная ошибка" };
+    return { error: error };
   }
 }

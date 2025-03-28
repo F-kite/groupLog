@@ -1,23 +1,23 @@
 export type DailyScheduleLessonProps = {
-  timeStart: string;
-  timeEnd: string;
-  subjectName: string;
-  subjectType: string;
-  teacherName: string;
-  roomNumber: string;
+  time_start: string;
+  time_end: string;
+  subject_name: string;
+  subject_type: string;
+  teacher_name: string;
+  room_number: string;
 };
 
 export type DailyScheduleProps = {
-  dayOfWeek: string;
+  day_of_week: string;
   date: string;
-  isHoliday: boolean;
+  is_holiday: boolean;
   lessons: DailyScheduleLessonProps[];
 };
 
 export type WeekScheduleProps = {
-  weekNumber: number;
-  groupName: string;
-  startDate: string;
-  endDate: string;
+  week_number: number;
+  group_name: string;
+  start_date: string;
+  end_date: string;
   days: DailyScheduleProps[];
 };

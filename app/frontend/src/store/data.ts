@@ -8,69 +8,69 @@ export const UserInfo: UserProps = {
   userEmail: "ilichevv_v845@mail.ru",
 };
 
-export const dailySchedule: DailyScheduleProps = {
-  dayOfWeek: "Monday",
-  date: "2025-01-13",
-  isHoliday: false,
-  lessons: [
-    {
-      timeStart: "09:00:00",
-      timeEnd: "10:30:00",
-      subjectName: "Разработка кода информационных систем - 2 п/г",
-      subjectType: "лаб",
-      teacherName: "Ерошевич К.В.",
-      roomNumber: "5514",
-    },
-    {
-      timeStart: "10:50:00",
-      timeEnd: "12:20:00",
-      subjectName: "Внедрение информационной системы - 1 п/г",
-      subjectType: "лаб",
-      teacherName: "Дементьева Ю.С.",
-      roomNumber: "5506",
-    },
-    {
-      timeStart: "10:50:00",
-      timeEnd: "12:20:00",
-      subjectName: "Разработка кода информационных систем - 2 п/г",
-      subjectType: "лаб",
-      teacherName: "Ерошевич К.В.",
-      roomNumber: "5514",
-    },
-    {
-      timeStart: "13:20:00",
-      timeEnd: "14:50:00",
-      subjectName: "Внедрение информационной системы",
-      subjectType: "л",
-      teacherName: "Дементьева Ю.С.",
-      roomNumber: "5505",
-    },
-    {
-      timeStart: "15:10:00",
-      timeEnd: "16:40:00",
-      subjectName: "Тестирование информационных систем",
-      subjectType: "л",
-      teacherName: "Романова В.В.",
-      roomNumber: "5503",
-    },
-    {
-      timeStart: "17:00:00",
-      timeEnd: "18:30:00",
-      subjectName: "Тестирование информационных систем - 1 п/г",
-      subjectType: "лаб",
-      teacherName: "Романова В.В.",
-      roomNumber: "5506",
-    },
-    {
-      timeStart: "18:50:00",
-      timeEnd: "20:20:00",
-      subjectName: "Тестирование информационных систем - 1 п/г",
-      subjectType: "лаб",
-      teacherName: "Романова В.В.",
-      roomNumber: "5506",
-    },
-  ],
-};
+// export const dailySchedule: DailyScheduleProps = {
+//   dayOfWeek: "Monday",
+//   date: "2025-01-13",
+//   isHoliday: false,
+//   lessons: [
+//     {
+//       timeStart: "09:00:00",
+//       timeEnd: "10:30:00",
+//       subjectName: "Разработка кода информационных систем - 2 п/г",
+//       subjectType: "лаб",
+//       teacherName: "Ерошевич К.В.",
+//       roomNumber: "5514",
+//     },
+//     {
+//       timeStart: "10:50:00",
+//       timeEnd: "12:20:00",
+//       subjectName: "Внедрение информационной системы - 1 п/г",
+//       subjectType: "лаб",
+//       teacherName: "Дементьева Ю.С.",
+//       roomNumber: "5506",
+//     },
+//     {
+//       timeStart: "10:50:00",
+//       timeEnd: "12:20:00",
+//       subjectName: "Разработка кода информационных систем - 2 п/г",
+//       subjectType: "лаб",
+//       teacherName: "Ерошевич К.В.",
+//       roomNumber: "5514",
+//     },
+//     {
+//       timeStart: "13:20:00",
+//       timeEnd: "14:50:00",
+//       subjectName: "Внедрение информационной системы",
+//       subjectType: "л",
+//       teacherName: "Дементьева Ю.С.",
+//       roomNumber: "5505",
+//     },
+//     {
+//       timeStart: "15:10:00",
+//       timeEnd: "16:40:00",
+//       subjectName: "Тестирование информационных систем",
+//       subjectType: "л",
+//       teacherName: "Романова В.В.",
+//       roomNumber: "5503",
+//     },
+//     {
+//       timeStart: "17:00:00",
+//       timeEnd: "18:30:00",
+//       subjectName: "Тестирование информационных систем - 1 п/г",
+//       subjectType: "лаб",
+//       teacherName: "Романова В.В.",
+//       roomNumber: "5506",
+//     },
+//     {
+//       timeStart: "18:50:00",
+//       timeEnd: "20:20:00",
+//       subjectName: "Тестирование информационных систем - 1 п/г",
+//       subjectType: "лаб",
+//       teacherName: "Романова В.В.",
+//       roomNumber: "5506",
+//     },
+//   ],
+// };
 
 export const attendanceStatistics: AttendanceStatisticsProps = {
   dailyStatistics: [
