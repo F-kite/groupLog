@@ -19,7 +19,6 @@ const RegistrationUser = async (
   data: RegistrationUserProps
 ): Promise<Response> => {
   const sentData = JSON.stringify(data);
-  console.debug("sentData:", sentData);
   try {
     const response = await axios.post(
       `${serverUsersURL}/registration`,
@@ -46,7 +45,6 @@ const RegistrationUser = async (
 
 const LoginUser = async (data: LoginUserProps): Promise<Response> => {
   const sentData = JSON.stringify(data);
-  console.debug("sentData:", sentData);
   try {
     const response = await axios.post(`${serverUsersURL}/login`, sentData, {
       headers: {

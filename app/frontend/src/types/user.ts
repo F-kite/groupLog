@@ -3,3 +3,9 @@ export type UserProps = {
   userName: string;
   userEmail: string;
 };
+
+export type BaseUserInfoProps = {
+  currentGroup:string;
+  currentWeeksNumber:number;
+  currentDate:string;
+}

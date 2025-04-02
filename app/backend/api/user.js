@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import supabase from "../supabase/index.js";
 import { emailSchema, usernameSchema } from "../schemas/userSchema.js";
 
@@ -30,7 +31,8 @@ const getByEmail = async (req, res) => {
 
 // Регистрация пользователя
 const registration = async (req, res) => {
-  const { name, email, password, additionalData = {} } = req.body;
+  const { name, email, password } = req.body;
+
   try {
     //Существует ли пользователь с такой почтой
     const { data: userEmail } = await supabase
@@ -57,21 +59,20 @@ const registration = async (req, res) => {
         .json({ error: "Пользователь с таким именем уже существует" });
     }
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signUp(
+      {
+        email,
+        password,
+      }
+    );
 
     if (error) {
       return res.status(500).json({ error: "Ошибка при регистрации" });
     }
 
-    const user_avatar_url = additionalData.avatar || null;
-
     const profileData = {
       name: name,
       email: email,
-      avatar_url,
     };
 
     const { data: profile, error: profileError } = await supabase
@@ -97,6 +98,8 @@ const registration = async (req, res) => {
 // Авторизация пользователя
 const login = async (req, res) => {
   const { userLogin, password } = req.body;
+
+
   try {
     let email;
     const isEmail = emailSchema.validate(userLogin).error === undefined;

@@ -41,7 +41,7 @@ import {
 } from "./schemas/subjectSchema.js";
 
 import {
-  attendanceSchemaToCreate,
+  attendanceArraySchemaToCreate,
   attendanceSchemaToUpdate,
 } from "./schemas/attendanceSchema.js";
 
@@ -97,7 +97,7 @@ app.get("api/admin/users", userApi.getByEmail);
 app.delete("api/admin/users", validate(userDeleteSchema), userApi.remove);
 
 app.post(
-  "/api/user/registration",
+  "/api/users/registration",
   validate(userRegisterSchema),
   userApi.registration
 );
@@ -157,7 +157,7 @@ app.get("/api/attendances/groups/:group", attendanceApi.getByGroup);
 app.get("/api/attendances/students/:student", attendanceApi.getByStudent);
 app.post(
   "/api/attendances",
-  validate(attendanceSchemaToCreate),
+  validate(attendanceArraySchemaToCreate),
   attendanceApi.create
 );
 app.put(

@@ -25,6 +25,15 @@ export const attendanceSchemaToCreate = Joi.object({
   }),
 });
 
+export const attendanceArraySchemaToCreate = Joi.array()
+  .items(attendanceSchemaToCreate)
+  .min(1)
+  .required()
+  .messages({
+    "array.min": "Массив должен содержать хотя бы одну запись",
+    "array.base": "Ожидался массив записей",
+  });
+
 export const attendanceSchemaToUpdate = Joi.object({
   status: Joi.string().valid("Б", "Н", "УП").optional().messages({
     "string.base": "Поле 'attendance_status' должно быть строкой.",

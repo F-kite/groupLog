@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, Fragment } from "react";
+import { useState, Fragment, useContext, useEffect } from "react";
 import {
   format,
   getWeek,
@@ -23,7 +22,28 @@ import {
 } from "@/components/ui/select";
 import { CalendarProps } from "@/types/calendar";
 
+import { MyContext } from "@/hooks/MyContextProvider";
 import styles from "./styles.module.scss";
+
+function setCurrentInfo(date: Date) {
+  const currentDate = date.toISOString().split("T")[0];
+  const currentWeeksNumber = getCustomWeekNumber(date);
+  return { currentDate, currentWeeksNumber };
+}
+
+function getCustomWeekNumber(date: Date): number {
+  // Дата начала первой недели (13 января)
+  const startOfFirstWeek = new Date(date.getFullYear(), 0, 13);
+
+  // Проверяем, что дата не раньше начала первой недели
+  if (date < startOfFirstWeek) {
+    return 0;
+  }
+  const diffInMilliseconds = date.getTime() - startOfFirstWeek.getTime();
+  const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
+  const weekNumber = Math.floor(diffInDays / 7) + 1;
+  return weekNumber;
+}
 
 export default function Calendar({
   className,
@@ -33,8 +53,22 @@ export default function Calendar({
   width = "50%",
   height = "auto",
 }: CalendarProps) {
+  const context = useContext(MyContext);
+
+  if (!context) {
+    throw new Error("MyContext must be used within a MyProvider");
+  }
+  const { baseUserInfo, setBaseUserInfo } = context;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+
+  // setBaseUserInfo(setCurrentInfo(currentDate))
+
+  useEffect(() => {
+    const currentInfo = setCurrentInfo(currentDate);
+    const currentGroup = baseUserInfo.currentGroup;
+    setBaseUserInfo({ currentGroup, ...currentInfo });
+  }, [setCurrentDate]);
 
   const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const months = [

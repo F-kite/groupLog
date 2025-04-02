@@ -33,16 +33,14 @@ export default function AttendanceTable() {
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
-  const { baseUserInfo } = context;
   const { students } = context;
   const { weekSchedule } = context;
   const { attendanceLog } = context;
-
-  //потом удалить
-  const dayNumber = (new Date(baseUserInfo.currentDate).getDay() + 6) % 7;
-  const CURRENT_DAY_SCHEDULE = weekSchedule.days[dayNumber];
-  console.log("CURRENT_DAY_SCHEDULE", CURRENT_DAY_SCHEDULE);
-
+  // const dayNumber = (new Date().getDay() + 6) % 7;
+  const dayNumber = 0;
+  const CURRENT_DAY = weekSchedule.days[dayNumber];
+  const CURRENT_DATE = CURRENT_DAY?.date;
+  console.log(CURRENT_DAY);
   const lessons = Array.from({ length: 6 }, (_, i) => i + 1); // Номера пар (1-6)
 
   // Параметры пагинации
@@ -176,9 +174,9 @@ export default function AttendanceTable() {
       {/* Кнопка переключения режима */}
       <div className={styles.title}>
         <div className={styles.info}>
-          <p>Посещаемость группы {baseUserInfo.currentGroup}</p>
+          <p>Посещаемость группы ИСт-221</p>
           <p className={styles.numStudents}>{students.length} студента</p>
-          <p className={styles.numStudents}>{baseUserInfo.currentDate}</p>
+          <p className={styles.numStudents}>{CURRENT_DATE}</p>
         </div>
         <div className={styles.buttons}>
           <div className={styles.buttonEditMode}>

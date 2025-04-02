@@ -3,10 +3,9 @@ export type StudentsProps = {
   subgroup: number;
   surname: string;
   name: string;
-  patronymic: string;
-  email: string;
-  phone: string;
-  tgid: string;
+  patronymic?: string;
+  email?: string;
+  phone?: string;
+  tgid?: string;
   enrollment_year: number;
-  marks: { [key: string]: "Б" | "УП" | "Н" };
 };

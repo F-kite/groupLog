@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -10,7 +10,6 @@ import {
 import { DailyScheduleLessonProps, DailyScheduleProps } from "@/types/schedule";
 import { lessonsTimeNumber } from "@/store/data";
 import { MyContext } from "@/hooks/MyContextProvider";
-import scheduleApi from "@/utils/api/schedule";
 import styles from "./styles.module.scss";
 import LessonCard from "./LessonCard";
 
@@ -37,60 +36,21 @@ const getPairNumberByTime = (timeStart: string): number | null => {
 
 export default function Slider(): JSX.Element {
   const context = useContext(MyContext);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const currentDay = (new Date().getDay() + 6) % 7;
+  const dayNumber = (new Date().getDay() + 6) % 7;
 
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
 
-  const { weekSchedule, setWeekSchedule } = context;
-  const DAYS = weekSchedule.days;
+  const { weekSchedule } = context;
+  const CURRENT_DAY = weekSchedule.days;
 
-  useEffect(() => {
-    let isMounted = true;
+  const groupedLessons = groupLessonsByTime(CURRENT_DAY[dayNumber]?.lessons || []);
 
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const scheduleResponse = await scheduleApi.getWeekSchedule(
-          "ИСт-221",
-          11
-        );
-        if (scheduleResponse.error) {
-          throw new Error(scheduleResponse.error);
-        }
-        if (isMounted) {
-          setWeekSchedule(scheduleResponse);
-        }
-      } catch (error: any) {
-        if (isMounted) {
-          setError(error.message);
-          console.error(error.message);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [setWeekSchedule]);
-
-  if (isLoading) return <p>Загрузка...</p>;
-  if (error) return <p>Ошибка: {error}</p>;
-
-  const groupedLessons = groupLessonsByTime(DAYS[currentDay]?.lessons || []);
-
-  if (!DAYS[currentDay]?.lessons) {
+  if (!CURRENT_DAY[dayNumber]?.lessons) {
     return <p>Нет расписания для текущего дня</p>;
+  } else if (CURRENT_DAY[dayNumber].is_holiday) {
+    return <p>Выходной день </p>;
   }
 
   return (

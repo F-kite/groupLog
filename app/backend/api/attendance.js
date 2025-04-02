@@ -1,95 +1,123 @@
 import supabase from "../supabase/index.js";
 
 const create = async (req, res) => {
-  const { student_id, lesson_schedule_id, status, day_schedule_id } = req.body;
+  const attendanceData = req.body; // Массив данных о посещаемости
 
-  // Проверка существования студента
-  const { data: student, error: studentError } = await supabase
-    .from("student")
-    .select("student_id, group_id")
-    .eq("student_id", student_id)
-    .single();
-
-  if (studentError || !student) {
-    return res.status(400).json({ error: "Student not found" });
+  if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
+    return res.status(400).json({ error: "Invalid or empty attendance data" });
   }
 
-  // Проверка существования занятия
-  const { data: lesson, error: lessonError } = await supabase
-    .from("lesson_schedule")
-    .select("lesson_schedule_id")
-    .eq("lesson_schedule_id", lesson_schedule_id)
-    .single();
+  const results = [];
+  const errors = [];
+  const duplicates = [];
 
-  if (lessonError || !lesson) {
-    return res.status(400).json({ error: "Lesson not found" });
+  for (const entry of attendanceData) {
+    const { student_id, lesson_schedule_id, status, day_schedule_id } = entry;
+    try {
+      // Проверка существования студента
+      const { data: student, error: studentError } = await supabase
+        .from("student")
+        .select("student_id, group_id")
+        .eq("student_id", student_id)
+        .single();
+
+      if (studentError || !student) {
+        throw new Error(`Student with ID ${student_id} not found`);
+      }
+
+      // Проверка существования занятия
+      const { data: lesson, error: lessonError } = await supabase
+        .from("lesson_schedule")
+        .select("lesson_schedule_id")
+        .eq("lesson_schedule_id", lesson_schedule_id)
+        .single();
+
+      if (lessonError || !lesson) {
+        throw new Error(`Lesson with ID ${lesson_schedule_id} not found`);
+      }
+
+      // Проверка существования дня расписания
+      const { data: day, error: dayError } = await supabase
+        .from("day_schedule")
+        .select("day_schedule_id")
+        .eq("day_schedule_id", day_schedule_id)
+        .single();
+
+      if (dayError || !day) {
+        throw new Error(`Day schedule with ID ${day_schedule_id} not found`);
+      }
+
+      // Проверка сопоставления занятия с днем
+      const { data: checkLesDay, error: checkLesDayError } = await supabase
+        .from("lesson_day_schedule")
+        .select("*")
+        .eq("day_id", day_schedule_id)
+        .eq("lesson_id", lesson_schedule_id)
+        .single();
+
+      if (checkLesDayError || !checkLesDay) {
+        throw new Error(
+          `There is no lesson with ID ${lesson_schedule_id} on the selected day with ID ${day_schedule_id}`
+        );
+      }
+
+      // Проверка на дублирование записи
+      const { data: existingRecord, error: existingRecordError } =
+        await supabase
+          .from("attendance_log")
+          .select("attendance_log_id")
+          .eq("student_id", student_id)
+          .eq("lesson_schedule_id", lesson_schedule_id)
+          .eq("day_schedule_id", day_schedule_id)
+          .single();
+
+      if (existingRecord) {
+        duplicates.push({
+          entry,
+          message: `This entry already exist and has been skipped`,
+        });
+        continue;
+      }
+
+      // Если все проверки пройдены, добавляем данные в результаты
+      results.push({
+        student_id,
+        lesson_schedule_id,
+        status,
+        day_schedule_id,
+      });
+    } catch (error) {
+      errors.push({ entry, error: error.message });
+    }
   }
 
-  // Проверка существования дня расписания
-  const { data: day, error: dayError } = await supabase
-    .from("day_schedule")
-    .select("day_schedule_id")
-    .eq("day_schedule_id", day_schedule_id)
-    .single();
-
-  if (dayError || !day) {
-    return res.status(400).json({ error: "Day schedule not found" });
-  }
-
-  // Проверка существования недели расписания
-  const { data: week, error: weekError } = await supabase
-    .from("week_schedule")
-    .select("week_schedule_id")
-    .eq("group_id", student.group_id)
-    .single();
-
-  if (weekError || !day) {
-    return res.status(400).json({ error: "Week schedule not found" });
-  }
-
-  // Проверка сопоставления дня с неделей
-  const { data: checkDayWeek, error: checkDayWeekError } = await supabase
-    .from("day_week_schedule")
-    .select("*")
-    .eq("week_id", week.week_schedule_id)
-    .eq("day_id", day_schedule_id)
-    .single();
-
-  if (checkDayWeekError || !checkDayWeek) {
-    return res.status(400).json({ error: "There is no day on the week" });
-  }
-
-  // Проверка сопоставления занятия с днем
-  const { data: checkLesDay, error: checkLesDayError } = await supabase
-    .from("lesson_day_schedule")
-    .select("*")
-    .eq("day_id", day_schedule_id)
-    .eq("lesson_id", lesson_schedule_id)
-    .single();
-
-  if (checkLesDayError || !checkLesDay) {
+  if (errors.length > 0) {
     return res
       .status(400)
-      .json({ error: "There is no lesson on the selected day" });
+      .json({ errors, message: "Some entries failed to process" });
   }
+  // вставка данных о посещаемости
+  if (results.length > 0) {
+    const { data, error } = await supabase
+      .from("attendance_log")
+      .insert(results)
+      .select();
 
-  // Добавление записи о посещаемости
-  const { data, error } = await supabase
-    .from("attendance_log")
-    .insert({
-      student_id,
-      lesson_schedule_id,
-      status,
-      day_schedule_id,
-    })
-    .select();
+    if (error) {
+      console.error(error.message);
+      return res
+        .status(500)
+        .json({ error: "Failed to create attendance logs" });
+    }
 
-  if (error) {
-    console.error(error.message);
-    return res.status(500).json({ error: "Failed to create attendance log" });
+    return res
+      .status(200)
+      .json({ message: `Attendance logs created successfully` });
+  } else {
+    return res.status(406).json({
+      message: `There is no data to record, it is possible that it is duplicated.`,
+    });
   }
-
-  return res.status(200).json(data);
 };
 
 const getAll = async (req, res) => {
@@ -199,17 +227,13 @@ const getByGroup = async (req, res) => {
     .select(
       `
           student_id,
-          name,
-          surname,
           attendance_log (
             attendance_log_id,
             lesson_schedule (
               subject_id,
-              subject (name, type),
-              time_start,
-              time_end
+              time_start
             ),
-            day_schedule (day_of_week, date),
+            day_schedule (date),
             status
           )
         `
@@ -236,15 +260,24 @@ const getByGroup = async (req, res) => {
       .json({ error: "No students or attendance logs found" });
   }
 
-  //фильтрация данный
-  const filteredAttendance = attendance.map((student) => ({
-    ...student,
-    attendance_log: student.attendance_log.filter(
-      (log) => log.day_schedule !== null
-    ),
-  }));
+  // Форматирование и фильтрация данных
+  const formattedAttendance = attendance.map((student) => {
+    const formattedLogs = student.attendance_log
+      .filter((log) => log.day_schedule && log.day_schedule.date !== null) //фильтрация отметок по дате
+      .map((log) => ({
+        date: log.day_schedule?.date || "Unknown",
+        status: log.status || "Unknown",
+        subject_id: log.lesson_schedule?.subject_id || "Unknown",
+        attendance_log_id: log.attendance_log_id || "Unknown",
+      }));
 
-  return res.status(200).json(filteredAttendance);
+    return {
+      student_id: student.student_id,
+      attendance_log: formattedLogs,
+    };
+  });
+
+  return res.status(200).json(formattedAttendance);
 };
 
 const getByStudent = async (req, res) => {

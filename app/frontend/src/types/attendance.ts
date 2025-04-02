@@ -21,3 +21,12 @@ export type AttendanceStatisticsProps = {
   weeklyStatistics: WeeklyStatisticsProps[];
   monthlyStatistics: MonthlyStatisticsProps[];
 };
+
+export type AttendanceProps = {
+  student_id: number;
+  date: string;
+  lesson_number: number;
+  status: "Б" | "УП" | "Н";
+  subject_id: number;
+  attendance_log_id: number;
+};
