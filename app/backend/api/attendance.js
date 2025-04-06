@@ -191,7 +191,7 @@ const getById = async (req, res) => {
   return res.status(200).json(log);
 };
 
-// не работает выборка по времени
+//Получение посещаемости студентов конкретной группы (есть необязательный параметр - дата, который указывается в url)
 const getByGroup = async (req, res) => {
   const { group } = req.params;
   const { date } = req.query;
@@ -216,7 +216,8 @@ const getByGroup = async (req, res) => {
     .single();
 
   if (groupError || !groupData) {
-    return res.status(400).json({ error: "Invalid group. Group not found." });
+    console.error("Group not found:", groupError?.message || "Unknown error");
+    return res.status(404).json({ error: "Group not found" });
   }
 
   const groupId = groupData.group_id;

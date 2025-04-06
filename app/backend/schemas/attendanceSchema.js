@@ -12,10 +12,11 @@ export const attendanceSchemaToCreate = Joi.object({
     "number.positive":
       "Поле 'lesson_schedule_id' должно быть положительным числом.",
   }),
-  status: Joi.string().valid("Б", "Н", "УП").required().messages({
+  status: Joi.string().valid("Б", "Н", "УП", "П").required().messages({
     "any.required": "Поле 'attendance_status' обязательно для заполнения.",
     "string.base": "Поле 'attendance_status' должно быть строкой.",
-    "any.only": "Поле 'status' должно быть одним из значений: 'Б', 'Н', 'УП'.",
+    "any.only":
+      "Поле 'status' должно быть одним из значений: 'П', 'Б', 'Н', 'УП'.",
   }),
   day_schedule_id: Joi.number().integer().positive().required().messages({
     "any.required": "Поле 'day_schedule_id' обязательно для заполнения.",
@@ -35,9 +36,10 @@ export const attendanceArraySchemaToCreate = Joi.array()
   });
 
 export const attendanceSchemaToUpdate = Joi.object({
-  status: Joi.string().valid("Б", "Н", "УП").optional().messages({
+  status: Joi.string().valid("Б", "Н", "УП", "П").optional().messages({
     "string.base": "Поле 'attendance_status' должно быть строкой.",
-    "any.only": "Поле 'status' должно быть одним из значений: 'Б', 'Н', 'УП'.",
+    "any.only":
+      "Поле 'status' должно быть одним из значений: 'П','Б', 'Н', 'УП' .",
   }),
   day_schedule_id: Joi.number().integer().positive().required().messages({
     "any.required": "Поле 'day_schedule_id' обязательно для заполнения.",

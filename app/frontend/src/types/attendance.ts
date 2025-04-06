@@ -30,3 +30,7 @@ export type AttendanceProps = {
   subject_id: number;
   attendance_log_id: number;
 };
+
+export type lessonNumberProps = {
+  [key: number]: number;
+};

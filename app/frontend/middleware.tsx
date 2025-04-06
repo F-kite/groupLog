@@ -14,15 +14,14 @@ export default function ProtectedRoute({
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await getProtectedRouteData().then(async (res) => {
-          if ("error" in res) {
-            throw new Error(`Требуется авторизация !\n${res.error}`);
-          } else if ("message" in res) {
-            setIsAuthenticated(true);
-          }
-        });
-      } catch (error) {
-        console.error(error);
+        const res = await getProtectedRouteData();
+        if ("error" in res) {
+          throw new Error(`Требуется авторизация!\n${res.error}`);
+        } else if ("message" in res) {
+          setIsAuthenticated(true);
+        }
+      } catch (error: any) {
+        console.error(error.message);
         setIsAuthenticated(false);
       } finally {
         setLoading(false);

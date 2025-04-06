@@ -65,9 +65,30 @@ const LoginUser = async (data: LoginUserProps): Promise<Response> => {
   }
 };
 
+const LogOutUser = async (): Promise<Response> => {
+  try {
+    const response = await axios.post(`${serverUsersURL}/logout`, {
+      credentials: "include",
+    });
+    if (response.statusText == "OK") {
+      return { success: "Успешно" }; // Успешный выход
+    } else {
+      throw new Error("Ошибка при выходе из системы");
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || "Ошибка запроса" };
+    } else if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: "Неизвестная ошибка" };
+  }
+};
+
 const userApi = {
   RegistrationUser,
   LoginUser,
+  LogOutUser,
 };
 
 export default userApi;

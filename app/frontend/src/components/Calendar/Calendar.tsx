@@ -1,5 +1,5 @@
 "use client";
-import { useState, Fragment, useContext, useEffect } from "react";
+import { useState, Fragment, useContext } from "react";
 import {
   format,
   getWeek,
@@ -23,13 +23,9 @@ import {
 import { CalendarProps } from "@/types/calendar";
 
 import { MyContext } from "@/hooks/MyContextProvider";
-import styles from "./styles.module.scss";
+import { BaseUserInfoProps } from "@/types/user";
 
-function setCurrentInfo(date: Date) {
-  const currentDate = date.toISOString().split("T")[0];
-  const currentWeeksNumber = getCustomWeekNumber(date);
-  return { currentDate, currentWeeksNumber };
-}
+import styles from "./styles.module.scss";
 
 function getCustomWeekNumber(date: Date): number {
   // Дата начала первой недели (13 января)
@@ -61,14 +57,6 @@ export default function Calendar({
   const { baseUserInfo, setBaseUserInfo } = context;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-
-  // setBaseUserInfo(setCurrentInfo(currentDate))
-
-  useEffect(() => {
-    const currentInfo = setCurrentInfo(currentDate);
-    const currentGroup = baseUserInfo.currentGroup;
-    setBaseUserInfo({ currentGroup, ...currentInfo });
-  }, [setCurrentDate]);
 
   const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const months = [
@@ -137,7 +125,12 @@ export default function Calendar({
     let year = date.getFullYear();
 
     let formattedDate = year + "-" + strMonth + "-" + strDay;
-    console.log(`Selected ${formattedDate}`);
+
+    setBaseUserInfo((prevState: BaseUserInfoProps) => ({
+      ...prevState,
+      currentWeeksNumber: getCustomWeekNumber(new Date(formattedDate)),
+      currentDate: formattedDate,
+    }));
   };
 
   const handleMonthChange = (monthIndex: string) => {

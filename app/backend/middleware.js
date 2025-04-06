@@ -19,19 +19,32 @@ export const authMiddleware = async (req, res, next) => {
     const authToken = req.cookies.authToken;
     const refreshToken = req.cookies.refreshToken;
 
+    if (!supabase) {
+      console.error("Supabase is not initialized");
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    if (!authToken && !refreshToken) {
+      console.debug("Ни один токен не найден");
+      return res.status(401).json({ error: "Authorization required" });
+    }
+
     if (authToken && refreshToken) {
-      next();
-    } else if (refreshToken) {
+      return next();
+    }
+
+    if (refreshToken) {
       const { data: refreshSession, refreshError } =
         await supabase.auth.refreshSession({
           refresh_token: refreshToken,
         });
-      const { session } = refreshSession;
 
       if (refreshError || !refreshSession) {
-        console.debug(refreshSession);
-        return res.status(400).json({ error: "Ошибка при обновлении токена" });
+        console.debug("Ошибка при обновлении токена:", refreshError);
+        return res.status(401).json({ error: "Failed to refresh token" });
       }
+
+      const { session } = refreshSession;
 
       // сохранение токена авторизации в куки
       res.cookie("authToken", session.access_token, {
@@ -50,11 +63,9 @@ export const authMiddleware = async (req, res, next) => {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
       });
       console.debug(" -- Токен обновления обновился");
-    } else {
-      console.debug("Ни один токен не найден");
-      return res.status(400).json({ error: "Tokens were not found" });
+
+      return next();
     }
-    next();
   } catch (error) {
     console.error(error);
     res.status(400).json({ message: "Invalid token" });

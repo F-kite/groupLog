@@ -21,8 +21,8 @@ export async function getProtectedRouteData() {
     const response = await axios.get(`${API_URL}/dashboard`);
     return { message: response.data };
   } catch (error) {
-    if (error instanceof Error) {
-      return { error: error.message };
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.message || "Ошибка авторизации" };
     }
     return { error: error };
   }

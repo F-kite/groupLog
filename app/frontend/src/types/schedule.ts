@@ -1,4 +1,5 @@
 export type DailyScheduleLessonProps = {
+  lesson_id: number;
   time_start: string;
   time_end: string;
   subject_name: string;
@@ -8,6 +9,7 @@ export type DailyScheduleLessonProps = {
 };
 
 export type DailyScheduleProps = {
+  day_id: number;
   day_of_week: string;
   date: string;
   is_holiday: boolean;

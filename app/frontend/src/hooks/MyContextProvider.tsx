@@ -9,7 +9,7 @@ interface MyContextProps {
   students: StudentsProps[];
   weekSchedule: WeekScheduleProps;
   attendanceLog: AttendanceProps[];
-  setBaseUserInfo: (baseUserInfo: BaseUserInfoProps) => void;
+  setBaseUserInfo: React.Dispatch<React.SetStateAction<BaseUserInfoProps>>;
   setStudents: (students: StudentsProps[]) => void;
   setWeekSchedule: (weekSchedule: WeekScheduleProps) => void;
   setAttendanceLog: (attendanceLog: AttendanceProps[]) => void;
@@ -24,8 +24,8 @@ export const MyContextProvider = ({
 }) => {
   const [baseUserInfo, setBaseUserInfo] = useState<BaseUserInfoProps>({
     currentGroup: "ИСт-221",
-    currentWeeksNumber: 12,
-    currentDate: "",
+    currentWeeksNumber: 0,
+    currentDate: new Date().toISOString().split("T")[0],
   });
   const [students, setStudents] = useState<StudentsProps[]>([]);
   const [weekSchedule, setWeekSchedule] = useState<WeekScheduleProps>({
@@ -36,6 +36,11 @@ export const MyContextProvider = ({
     days: [],
   });
   const [attendanceLog, setAttendanceLog] = useState<AttendanceProps[]>([]);
+
+  if (!baseUserInfo.currentGroup) {
+    console.warn("Current group is not set");
+    return;
+  }
 
   return (
     <MyContext.Provider

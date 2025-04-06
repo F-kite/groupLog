@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut } from "lucide-react";
 import styles from "./styles.module.scss";
 
 import { useResize } from "@/hooks/useResize";
 
 import { UserInfo } from "@/store/data";
+
+import userApi from "@/utils/api/users";
 
 const navItems = [
   { name: "Главная", href: "/" },
@@ -19,12 +21,20 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
   const width = useResize();
+  const navigate = useNavigate();
 
   const username = UserInfo.userName;
   const useremail = UserInfo.userEmail;
 
-  const handleLogout = () => {
-    // Реализовать логику выхода
+  const handleLogout = async () => {
+    try {
+      const response = await userApi.LogOutUser();
+      console.log("response", response);
+      console.log({ ...response });
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+    }
     console.log("Выход из системы");
   };
 

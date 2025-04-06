@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -10,8 +10,9 @@ import {
 import { DailyScheduleLessonProps, DailyScheduleProps } from "@/types/schedule";
 import { lessonsTimeNumber } from "@/store/data";
 import { MyContext } from "@/hooks/MyContextProvider";
-import styles from "./styles.module.scss";
 import LessonCard from "./LessonCard";
+import scheduleApi from "@/utils/api/schedule";
+import styles from "./styles.module.scss";
 
 type Lesson = DailyScheduleProps["lessons"][0];
 type GroupedLessons = { [time: string]: DailyScheduleLessonProps[] };
@@ -36,21 +37,41 @@ const getPairNumberByTime = (timeStart: string): number | null => {
 
 export default function Slider(): JSX.Element {
   const context = useContext(MyContext);
-  const dayNumber = (new Date().getDay() + 6) % 7;
+  const [isScheduleLoading, setIsScheduleLoading] = useState(true);
 
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
 
   const { weekSchedule } = context;
+  const { baseUserInfo } = context;
+
+  const dayNumber = (new Date(baseUserInfo.currentDate).getDay() + 6) % 7;
   const CURRENT_DAY = weekSchedule.days;
 
-  const groupedLessons = groupLessonsByTime(CURRENT_DAY[dayNumber]?.lessons || []);
+  const groupedLessons = groupLessonsByTime(
+    CURRENT_DAY[dayNumber]?.lessons || []
+  );
+
+  // Имитация загрузки данных
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsScheduleLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isScheduleLoading && !CURRENT_DAY[dayNumber]?.lessons) {
+    return <p>Загрузка расписания...</p>;
+  }
 
   if (!CURRENT_DAY[dayNumber]?.lessons) {
     return <p>Нет расписания для текущего дня</p>;
-  } else if (CURRENT_DAY[dayNumber].is_holiday) {
-    return <p>Выходной день </p>;
+  }
+
+  if (CURRENT_DAY[dayNumber].is_holiday) {
+    return <p>Выходной день</p>;
   }
 
   return (

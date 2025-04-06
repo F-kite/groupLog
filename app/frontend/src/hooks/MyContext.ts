@@ -11,11 +11,11 @@ interface MyContextProps {
   attendanceLog: AttendanceProps[];
 }
 
-export const MyContext = createContext<MyContextProps | null>({
+export const MyContext = createContext<MyContextProps>({
   baseUserInfo: {
     currentGroup: "",
     currentWeeksNumber: 0,
-    currentDate: "",
+    currentDate: new Date().toISOString().split("T")[0],
   },
   students: [],
   dailySchedule: {

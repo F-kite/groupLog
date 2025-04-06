@@ -273,11 +273,11 @@ const getWeeklySchedule = async (req, res) => {
       .eq("name", group)
       .single();
 
-    if (gError) {
-      throw new Error(gError.message);
+    if (gError || !gData) {
+      console.error("Group not found:", gError?.message || "Unknown error");
+      return res.status(404).json({ error: "Group not found" });
     }
 
-    if (!gData) throw new Error("Указанная группа не найдена");
     const groupId = gData.group_id;
     // Получить данные о неделе
     const { data: weekData, error: weekError } = await supabase

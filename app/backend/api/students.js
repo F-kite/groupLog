@@ -69,8 +69,9 @@ const getByGroup = async (req, res) => {
     .eq("name", groupName)
     .single();
 
-  if (groupError) {
-    return res.status(400).json({ error: "Invalid group. Group not found." });
+  if (groupError || !group) {
+    console.error("Group not found:", groupError?.message || "Unknown error");
+    return res.status(404).json({ error: "Group not found" });
   }
 
   const { data: students, error } = await supabase
@@ -91,14 +92,16 @@ const getByGroup = async (req, res) => {
     .eq("group_id", group.group_id)
     .order("surname", { ascending: true });
 
-  if (!students || students.length === 0) {
-    return res.status(404).json({ error: "Students not found" });
-  } else if (error) {
-    console.error(error.message);
-    return res.status(500).json({ error: "Error to fetch students" });
-  } else {
-    return res.status(200).json(students);
+  if (error) {
+    console.error("Error fetching students:", error.message);
+    return res.status(500).json({ error: "Failed to fetch students" });
   }
+
+  if (!students || students.length === 0) {
+    return res.status(404).json({ error: "No students found for this group" });
+  }
+
+  return res.status(200).json(students);
 };
 
 // Добавить массив студентов

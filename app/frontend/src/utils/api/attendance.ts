@@ -1,41 +1,8 @@
 import axios from "axios";
 
+import { StudentMarkInfoProps } from "@/types/student";
+
 const serverAttendanceURL = "http://localhost:3001/api/attendances";
-
-// async function getWeekSchedule(group: string, week: number) {
-//   try {
-//     const controller = new AbortController();
-//     const timeoutId = setTimeout(() => {
-//       controller.abort();
-//     }, 8000);
-
-//     const response = await fetch(`${serverScheduleURL}/${group}/${week}`, {
-//       method: "GET",
-//       signal: controller.signal,
-//     });
-
-//     clearTimeout(timeoutId);
-
-//     if (!response.ok) {
-//       console.error(`Ошибка HTTP: ${response.status} ${response.statusText}`);
-//       throw new Error(`Ошибка HTTP: ${response.status} ${response.statusText}`);
-//     }
-
-//     const contentType = response.headers.get("content-type");
-//     if (!contentType || !contentType.includes("application/json")) {
-//       throw new Error("Ответ сервера не является JSON");
-//     }
-
-//     const data = await response.json();
-
-//     return data;
-//   } catch (error: any) {
-//     if (error.name === "AbortError") {
-//       throw new Error("Запрос был отменен из-за таймаута");
-//     }
-//     throw new Error(error.message);
-//   }
-// }
 
 async function getAttendanceByGroup(group: string, date?: string) {
   let strQuery = "";
@@ -53,17 +20,42 @@ async function getAttendanceByGroup(group: string, date?: string) {
   }
   try {
     const response = await axios.get(strQuery);
+    console.log(response);
     return response.data;
   } catch (error) {
+    console.error(error);
     if (error instanceof Error) {
       return { error: error.message };
     }
     return { error: error };
   }
 }
+async function addAttendanceRecords(data: StudentMarkInfoProps[]) {
+  const sentData = JSON.stringify(data);
+  try {
+    const response = await axios.post(serverAttendanceURL, sentData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.data) {
+      return { success: response.data.message };
+    }
+    return { error: "Неизвестная ошибка: пустой ответ от сервера" };
+  } catch (error) {
+    console.error(error);
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || "Ошибка запроса" };
+    } else if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: "Неизвестная ошибка" };
+  }
+}
 
 const attendanceApi = {
   getAttendanceByGroup,
+  addAttendanceRecords,
 };
 
 export default attendanceApi;

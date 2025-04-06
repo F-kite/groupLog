@@ -89,13 +89,16 @@ post - создание со статусом 201 после успешного 
 put - обновление записи
 */
 
+//Админка
+app.get("api/admin/users", userApi.getByEmail);
+app.delete("api/admin/users", validate(userDeleteSchema), userApi.remove);
+
+//Расписание
 app.get("/api/schedule/:group/:week", scheduleApi.getWeeklySchedule);
 app.get("/api/schedule/:group/:week/:day", scheduleApi.getDailySchedule);
 app.post("/api/schedule/:group/:week", scheduleApi.createSchedule);
 
-app.get("api/admin/users", userApi.getByEmail);
-app.delete("api/admin/users", validate(userDeleteSchema), userApi.remove);
-
+//Пользователь
 app.post(
   "/api/users/registration",
   validate(userRegisterSchema),
@@ -143,6 +146,7 @@ app.delete("/api/teachers/:id", teacherApi.remove);
 // Предметы
 app.get("/api/subjects", subjectsApi.getAll);
 app.get("/api/subjects/:id", subjectsApi.getById);
+
 // app.put(
 //   "/api/subjects/id/:id",
 //   validate(subjectSchemaToUpdate),

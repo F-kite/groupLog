@@ -59,12 +59,10 @@ const registration = async (req, res) => {
         .json({ error: "Пользователь с таким именем уже существует" });
     }
 
-    const { error } = await supabase.auth.signUp(
-      {
-        email,
-        password,
-      }
-    );
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
     if (error) {
       return res.status(500).json({ error: "Ошибка при регистрации" });
@@ -98,7 +96,6 @@ const registration = async (req, res) => {
 // Авторизация пользователя
 const login = async (req, res) => {
   const { userLogin, password } = req.body;
-
 
   try {
     let email;
@@ -170,7 +167,9 @@ const logout = async (req, res) => {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    return res.status(204).end();
+    res.clearCookie("authToken"); // Удаление access-токена
+    res.clearCookie("refreshToken"); // Удаление refresh-токена
+    return res.status(200).json({ message: "Успешно" });
   } catch (err) {
     throw err;
   }

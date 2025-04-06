@@ -1,5 +1,4 @@
 import { useContext, useState } from "react";
-import { MyContext } from "@/hooks/MyContextProvider";
 import {
   Table,
   TableBody,
@@ -25,6 +24,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+
+import { MyContext } from "@/hooks/MyContextProvider";
+import { StudentMarkInfoProps } from "@/types/student";
+import { lessonNumberProps } from "@/types/attendance";
+import { lessonsTimeNumber } from "@/store/data";
+import attendanceApi from "@/utils/api/attendance";
 import styles from "./styles.module.scss";
 
 export default function AttendanceTable() {
@@ -33,17 +38,36 @@ export default function AttendanceTable() {
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
-  const { baseUserInfo } = context;
-  const { students } = context;
-  const { weekSchedule } = context;
-  const { attendanceLog } = context;
 
-  //потом удалить
+  const { baseUserInfo, students, weekSchedule, attendanceLog } = context;
+
+  const studentMarkInfoArray: StudentMarkInfoProps[] = [];
+
   const dayNumber = (new Date(baseUserInfo.currentDate).getDay() + 6) % 7;
-  const CURRENT_DAY_SCHEDULE = weekSchedule.days[dayNumber];
-  console.log("CURRENT_DAY_SCHEDULE", CURRENT_DAY_SCHEDULE);
+  const currentDaySchedule = weekSchedule.days[dayNumber];
 
-  const lessons = Array.from({ length: 6 }, (_, i) => i + 1); // Номера пар (1-6)
+  const lessonNumbers: lessonNumberProps = {};
+  const lessons =
+    currentDaySchedule && currentDaySchedule.lessons
+      ? Array.from({ length: currentDaySchedule.lessons.length }, (_, i) => i)
+      : []; // Порядковые номера пар
+
+  const numberScheduledLesson: number[] = [];
+  //Нумерация пар в соот с расписанием
+  currentDaySchedule && currentDaySchedule.lessons
+    ? currentDaySchedule.lessons.map((lesson) => {
+        lessonsTimeNumber.map((el) => {
+          if (el.timeStart == lesson.time_start)
+            numberScheduledLesson.push(el.pairNumber);
+        });
+      })
+    : [];
+
+  lessons.map((lesson) => {
+    lessonNumbers[lesson] = currentDaySchedule.lessons[lesson].lesson_id;
+  });
+
+  console.log("CURRENT_DAY_SCHEDULE", currentDaySchedule);
 
   // Параметры пагинации
   const [currentPage, setCurrentPage] = useState(1);
@@ -129,27 +153,25 @@ export default function AttendanceTable() {
 
   // Функция для получения измененных отметок
   const getChangedMarks = () => {
-    const changedMarks: any = [];
-
     students.forEach((student) => {
       const studentId = student.student_id;
       if (updatedMarks[studentId]) {
         Object.entries(updatedMarks[studentId]).forEach(([lesson, value]) => {
-          const lessonNumber = parseInt(lesson, 10);
-          console.log("lessonNumber", lessonNumber);
-          const originalValue = getStudentMarks(studentId)[lessonNumber] || " ";
+          const lessonNum = parseInt(lesson);
+          const originalValue = getStudentMarks(studentId)[lessonNum] || " ";
           if (value !== originalValue) {
-            changedMarks.push({
-              studentId,
-              lesson: lessonNumber,
-              mark: value,
+            studentMarkInfoArray.push({
+              student_id: studentId,
+              day_schedule_id: currentDaySchedule.day_id,
+              lesson_schedule_id: lessonNumbers[lessonNum],
+              status: value,
             });
           }
         });
       }
     });
 
-    return changedMarks;
+    return studentMarkInfoArray;
   };
 
   // Переключение режима работы
@@ -159,17 +181,30 @@ export default function AttendanceTable() {
   };
 
   // Сохранение изменений
-  const saveChanges = () => {
-    const changedMarks = getChangedMarks();
+  const saveChanges = async () => {
+    getChangedMarks();
 
-    if (changedMarks.length === 0) {
+    if (studentMarkInfoArray.length === 0) {
       console.log("Нет изменений для сохранения.");
       return;
     }
 
-    console.log("Измененные отметки:", changedMarks);
+    //здесь нужно делать запрос в бд
+    console.log("Измененные отметки:", [...studentMarkInfoArray]);
 
-    // Здесь можно добавить логику отправки данных на сервер
+    const response = await attendanceApi.addAttendanceRecords(
+      studentMarkInfoArray
+    );
+
+    if (response.success) {
+      console.log(response);
+    }
+
+    if (response.error) {
+      console.error(response.error);
+    }
+
+    studentMarkInfoArray.length = 0;
   };
   return (
     <div className={styles.container}>
@@ -214,7 +249,7 @@ export default function AttendanceTable() {
               Студенты
             </TableHead>
 
-            {lessons.map((lesson) => (
+            {numberScheduledLesson.map((lesson) => (
               <TableHead key={lesson}>{lesson}-я пара</TableHead>
             ))}
           </TableRow>
@@ -271,6 +306,7 @@ export default function AttendanceTable() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="П">П</SelectItem>
                           <SelectItem value="Б">Б</SelectItem>
                           <SelectItem value="УП">УП</SelectItem>
                           <SelectItem value="Н">Н</SelectItem>

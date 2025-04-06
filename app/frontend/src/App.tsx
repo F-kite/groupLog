@@ -9,15 +9,9 @@ import ErrorPageNotFound from "./pages/ErrorPages/404Page.tsx";
 import ErrorServerUnavailable from "./pages/ErrorPages/503Page.tsx";
 
 import ProtectedRoute from "../middleware.tsx";
-import { MyContextProvider } from "./hooks/MyContextProvider.tsx";
-import { checkServer } from "./utils/api/index.ts";
+import { MyContextProvider } from "@/hooks/MyContextProvider.tsx";
+import { checkServer } from "@/utils/api/index.ts";
 import "./App.css";
-
-{
-  /*
-  Сделать хеширование паролей при регистрации / авторизации
-   */
-}
 
 export default function App() {
   const [isServerDown, setIsServerDown] = useState<boolean>();
