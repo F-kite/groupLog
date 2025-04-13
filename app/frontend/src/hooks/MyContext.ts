@@ -2,25 +2,30 @@ import { createContext, useContext } from "react";
 import { StudentsProps } from "@/types/student";
 import { WeekScheduleProps } from "@/types/schedule";
 import { AttendanceProps } from "@/types/attendance";
-import { BaseUserInfoProps } from "@/types/user";
+import { CurrentInfoProps, UserInfoProps } from "@/types/user";
 
 interface MyContextProps {
-  baseUserInfo: BaseUserInfoProps;
+  userInfo: UserInfoProps;
+  currentInfo: CurrentInfoProps;
   students: StudentsProps[];
   dailySchedule: WeekScheduleProps;
   attendanceLog: AttendanceProps[];
 }
 
 export const MyContext = createContext<MyContextProps>({
-  baseUserInfo: {
-    currentGroup: "",
+  userInfo: {
+    name: "",
+    email: "",
+    role: "",
+    group: "",
+  },
+  currentInfo: {
     currentWeeksNumber: 0,
     currentDate: new Date().toISOString().split("T")[0],
   },
   students: [],
   dailySchedule: {
     week_number: 0,
-    group_name: "",
     start_date: "",
     end_date: "",
     days: [],

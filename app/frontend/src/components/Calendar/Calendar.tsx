@@ -23,7 +23,6 @@ import {
 import { CalendarProps } from "@/types/calendar";
 
 import { MyContext } from "@/hooks/MyContextProvider";
-import { BaseUserInfoProps } from "@/types/user";
 
 import styles from "./styles.module.scss";
 
@@ -54,9 +53,11 @@ export default function Calendar({
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
-  const { baseUserInfo, setBaseUserInfo } = context;
+  const { currentInfo, setCurrentInfo } = context;
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    new Date(currentInfo.currentDate)
+  );
 
   const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const months = [
@@ -126,11 +127,10 @@ export default function Calendar({
 
     let formattedDate = year + "-" + strMonth + "-" + strDay;
 
-    setBaseUserInfo((prevState: BaseUserInfoProps) => ({
-      ...prevState,
+    setCurrentInfo({
       currentWeeksNumber: getCustomWeekNumber(new Date(formattedDate)),
       currentDate: formattedDate,
-    }));
+    });
   };
 
   const handleMonthChange = (monthIndex: string) => {

@@ -7,26 +7,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-import { DailyScheduleLessonProps, DailyScheduleProps } from "@/types/schedule";
 import { lessonsTimeNumber } from "@/store/data";
+import { groupLessonsByTime } from "@/hooks/groupLessonsByTime";
 import { MyContext } from "@/hooks/MyContextProvider";
 import LessonCard from "./LessonCard";
-import scheduleApi from "@/utils/api/schedule";
 import styles from "./styles.module.scss";
-
-type Lesson = DailyScheduleProps["lessons"][0];
-type GroupedLessons = { [time: string]: DailyScheduleLessonProps[] };
-
-const groupLessonsByTime = (lessons: Lesson[]): GroupedLessons => {
-  return lessons.reduce((acc: GroupedLessons, lesson) => {
-    const key = `${lesson.time_start}-${lesson.time_end}`;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(lesson);
-    return acc;
-  }, {});
-};
 
 const getPairNumberByTime = (timeStart: string): number | null => {
   const currentPair = lessonsTimeNumber.find(
@@ -44,9 +29,9 @@ export default function Slider(): JSX.Element {
   }
 
   const { weekSchedule } = context;
-  const { baseUserInfo } = context;
+  const { currentInfo } = context;
 
-  const dayNumber = (new Date(baseUserInfo.currentDate).getDay() + 6) % 7;
+  const dayNumber = (new Date(currentInfo.currentDate).getDay() + 6) % 7;
   const CURRENT_DAY = weekSchedule.days;
 
   const groupedLessons = groupLessonsByTime(

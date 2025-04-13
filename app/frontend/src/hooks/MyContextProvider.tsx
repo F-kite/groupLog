@@ -2,54 +2,95 @@ import React, { createContext, useState } from "react";
 import { StudentsProps } from "@/types/student";
 import { WeekScheduleProps } from "@/types/schedule";
 import { AttendanceProps } from "@/types/attendance";
-import { BaseUserInfoProps } from "@/types/user";
+import { CurrentInfoProps, UserInfoProps } from "@/types/user";
 
 interface MyContextProps {
-  baseUserInfo: BaseUserInfoProps;
+  userInfo: UserInfoProps;
+  currentInfo: CurrentInfoProps;
   students: StudentsProps[];
   weekSchedule: WeekScheduleProps;
   attendanceLog: AttendanceProps[];
-  setBaseUserInfo: React.Dispatch<React.SetStateAction<BaseUserInfoProps>>;
+  setUserInfo: (userInfo: UserInfoProps) => void;
+  setCurrentInfo: (currentInfo: CurrentInfoProps) => void;
   setStudents: (students: StudentsProps[]) => void;
   setWeekSchedule: (weekSchedule: WeekScheduleProps) => void;
   setAttendanceLog: (attendanceLog: AttendanceProps[]) => void;
 }
 
-export const MyContext = createContext<MyContextProps | null>(null);
+function getCustomWeekNumber(date: Date): number {
+  // Дата начала первой недели (13 января)
+  const startOfFirstWeek = new Date(date.getFullYear(), 0, 13);
+
+  // Проверяем, что дата не раньше начала первой недели
+  if (date < startOfFirstWeek) {
+    return 0;
+  }
+  const diffInMilliseconds = date.getTime() - startOfFirstWeek.getTime();
+  const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
+  const weekNumber = Math.floor(diffInDays / 7) + 1;
+  return weekNumber;
+}
+
+export const MyContext = createContext<MyContextProps>({
+  userInfo: {
+    name: "",
+    email: "",
+    role: "",
+    group: "",
+  },
+  currentInfo: {
+    currentWeeksNumber: getCustomWeekNumber(new Date()),
+    currentDate: new Date().toISOString().split("T")[0],
+  },
+  students: [],
+  weekSchedule: {
+    week_number: 0,
+    start_date: "",
+    end_date: "",
+    days: [],
+  },
+  attendanceLog: [],
+  setUserInfo: () => {},
+  setCurrentInfo: () => {},
+  setStudents: () => {},
+  setWeekSchedule: () => {},
+  setAttendanceLog: () => {},
+});
 
 export const MyContextProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const [baseUserInfo, setBaseUserInfo] = useState<BaseUserInfoProps>({
-    currentGroup: "ИСт-221",
-    currentWeeksNumber: 0,
+  const [userInfo, setUserInfo] = useState<UserInfoProps>({
+    name: "",
+    email: "",
+    role: "",
+    group: "",
+  });
+  const [currentInfo, setCurrentInfo] = useState<CurrentInfoProps>({
+    currentWeeksNumber: getCustomWeekNumber(new Date()),
     currentDate: new Date().toISOString().split("T")[0],
   });
   const [students, setStudents] = useState<StudentsProps[]>([]);
   const [weekSchedule, setWeekSchedule] = useState<WeekScheduleProps>({
     week_number: 0,
-    group_name: "",
     start_date: "",
     end_date: "",
     days: [],
   });
   const [attendanceLog, setAttendanceLog] = useState<AttendanceProps[]>([]);
 
-  if (!baseUserInfo.currentGroup) {
-    console.warn("Current group is not set");
-    return;
-  }
-
   return (
     <MyContext.Provider
       value={{
-        baseUserInfo,
+        userInfo,
+        currentInfo,
         students,
         weekSchedule,
         attendanceLog,
-        setBaseUserInfo,
+        setUserInfo,
+        setCurrentInfo,
         setStudents,
         setWeekSchedule,
         setAttendanceLog,

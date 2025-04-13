@@ -120,20 +120,20 @@ export const communicationWithDeveloper = [
   },
 ];
 
-// export const lessonsTimeNumber = [
-//   { pairNumber: 1, timeStart: "09:00:00", timeEnd: "10:30:00" },
-//   { pairNumber: 2, timeStart: "10:50:00", timeEnd: "12:20:00" },
-//   { pairNumber: 3, timeStart: "13:20:00", timeEnd: "14:50:00" },
-//   { pairNumber: 4, timeStart: "15:10:00", timeEnd: "16:40:00" },
-//   { pairNumber: 5, timeStart: "17:00:00", timeEnd: "18:30:00" },
-//   { pairNumber: 6, timeStart: "18:50:00", timeEnd: "20:20:00" },
-// ];
-
 export const lessonsTimeNumber = [
-  { pairNumber: 1, timeStart: "09:00:00" },
-  { pairNumber: 2, timeStart: "10:50:00" },
-  { pairNumber: 3, timeStart: "13:20:00" },
-  { pairNumber: 4, timeStart: "15:10:00" },
-  { pairNumber: 5, timeStart: "17:00:00" },
-  { pairNumber: 6, timeStart: "18:50:00" },
+  { pairNumber: 1, timeStart: "09:00:00", timeEnd: "10:30:00" },
+  { pairNumber: 2, timeStart: "10:50:00", timeEnd: "12:20:00" },
+  { pairNumber: 3, timeStart: "13:20:00", timeEnd: "14:50:00" },
+  { pairNumber: 4, timeStart: "15:10:00", timeEnd: "16:40:00" },
+  { pairNumber: 5, timeStart: "17:00:00", timeEnd: "18:30:00" },
+  { pairNumber: 6, timeStart: "18:50:00", timeEnd: "20:20:00" },
 ];
+
+// export const lessonsTimeNumber = [
+//   { pairNumber: 1, timeStart: "09:00:00" },
+//   { pairNumber: 2, timeStart: "10:50:00" },
+//   { pairNumber: 3, timeStart: "13:20:00" },
+//   { pairNumber: 4, timeStart: "15:10:00" },
+//   { pairNumber: 5, timeStart: "17:00:00" },
+//   { pairNumber: 6, timeStart: "18:50:00" },
+// ];

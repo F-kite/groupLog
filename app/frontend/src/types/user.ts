@@ -1,11 +1,11 @@
-export type UserProps = {
-  role: string;
-  userName: string;
-  userEmail: string;
+export type CurrentInfoProps = {
+  currentWeeksNumber: number;
+  currentDate: string;
 };
 
-export type BaseUserInfoProps = {
-  currentGroup:string;
-  currentWeeksNumber:number;
-  currentDate:string;
-}
+export type UserInfoProps = {
+  name: string;
+  email: string;
+  role: string;
+  group: string;
+};

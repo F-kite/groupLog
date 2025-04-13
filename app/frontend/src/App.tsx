@@ -20,12 +20,12 @@ export default function App() {
     const performCheck = async () => {
       try {
         const result = await checkServer();
-        if (!result.error) {
-          console.log("Сервер доступен");
-          setIsServerDown(false);
-        } else {
+        if (result.error) {
           console.error("Ошибка соединения с сервером:", result.error);
           setIsServerDown(true);
+        } else {
+          console.log("Сервер доступен");
+          setIsServerDown(false);
         }
       } catch (error) {
         console.error("Не удалось выполнить проверку:", error);

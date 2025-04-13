@@ -18,7 +18,6 @@ export type DailyScheduleProps = {
 
 export type WeekScheduleProps = {
   week_number: number;
-  group_name: string;
   start_date: string;
   end_date: string;
   days: DailyScheduleProps[];

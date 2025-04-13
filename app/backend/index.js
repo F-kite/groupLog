@@ -77,9 +77,7 @@ app.get("/ping", (req, res) => {
 });
 
 app.get("/dashboard", authMiddleware, (req, res) => {
-  res.json({
-    message: "Добро пожаловать на защищенную страницу",
-  });
+  res.json(req.user);
 });
 
 app.post("/api/refresh-token", dbApi.refreshAuthToken);

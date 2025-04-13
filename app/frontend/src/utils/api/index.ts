@@ -22,7 +22,11 @@ export async function getProtectedRouteData() {
     return { message: response.data };
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      return { error: error.response?.data?.message || "Ошибка авторизации" };
+      return {
+        error:
+          `${error.message}: ${error.response?.statusText}` ||
+          "Ошибка авторизации",
+      };
     }
     return { error: error };
   }
