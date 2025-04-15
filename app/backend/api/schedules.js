@@ -316,7 +316,7 @@ const getWeeklySchedule = async (req, res) => {
               lesson_schedule_id,
               time_start,
               time_end,
-              subject (name, type),
+              subject (subject_id, name, type),
               teacher (name),
               room (number)
             )
@@ -349,6 +349,7 @@ const getWeeklySchedule = async (req, res) => {
             lesson_id: lesson.lesson_schedule_id,
             time_start: lesson.time_start,
             time_end: lesson.time_end,
+            subject_id: lesson.subject.subject_id,
             subject_name: lesson.subject.name,
             subject_type: lesson.subject.type,
             teacher_name: lesson.teacher.name,

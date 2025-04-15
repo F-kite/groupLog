@@ -1,15 +1,21 @@
 import { DailyScheduleLessonProps, DailyScheduleProps } from "@/types/schedule";
+import { lessonsTimeNumber } from "@/store/data";
 
 type Lesson = DailyScheduleProps["lessons"][0];
-type GroupedLessons = { [time: string]: DailyScheduleLessonProps[] };
+export type GroupedLessons = { [pairNum: string]: DailyScheduleLessonProps[] };
 
 export const groupLessonsByTime = (lessons: Lesson[]): GroupedLessons => {
   return lessons.reduce((acc: GroupedLessons, lesson) => {
-    const key = `${lesson.time_start}-${lesson.time_end}`;
-    if (!acc[key]) {
-      acc[key] = [];
+    const pairNum = lessonsTimeNumber.find(
+      (el) => el.timeStart === lesson.time_start
+    )?.pairNumber;
+
+    if (pairNum) {
+      if (!acc[pairNum]) {
+        acc[pairNum] = [];
+      }
+      acc[pairNum].push(lesson);
     }
-    acc[key].push(lesson);
     return acc;
   }, {});
 };

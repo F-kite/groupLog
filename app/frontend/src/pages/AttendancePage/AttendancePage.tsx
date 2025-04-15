@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -16,32 +16,19 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { MyContext } from "@/hooks/MyContextProvider";
-import { StudentMarkInfoProps } from "@/types/student";
-import { groupLessonsByTime } from "@/hooks/groupLessonsByTime";
-import { lessonsTimeNumber } from "@/store/data";
-import attendanceApi from "@/utils/api/attendance";
+import { DailyScheduleProps, DailyScheduleLessonProps } from "@/types/schedule";
+import { StudentsProps } from "@/types/student";
+import { Attendance_logProps } from "@/types/attendance";
 import styles from "./styles.module.scss";
+import { groupLessonsByTime, GroupedLessons } from "@/hooks/groupLessonsByTime";
 
-type FormattedScheduleProps = {
-  lessonNumber: number;
-  subgroup: number;
-  lessonId: number;
+type StudentAttendanceProps = Omit<
+  StudentsProps,
+  "email" | "phone" | "enrollment_year"
+> & {
+  studentLog: Attendance_logProps[];
 };
-
-function getSubgroup(subjectName: string): number {
-  if (subjectName.includes("1 п/г")) return 1;
-  if (subjectName.includes("2 п/г")) return 2;
-  return 0;
-}
 
 export default function AttendanceTable() {
   const context = useContext(MyContext);
@@ -51,178 +38,129 @@ export default function AttendanceTable() {
   const { userInfo, currentInfo, students, weekSchedule, attendanceLog } =
     context;
 
-  // Логика форматирования расписания
-  const formatSchedule = () => {
-    const dayNumber = (new Date(currentInfo.currentDate).getDay() + 6) % 7;
-    const currentDaySchedule = weekSchedule.days[dayNumber];
-    if (!currentDaySchedule?.lessons) return [];
-
-    const groupedLessons = groupLessonsByTime(currentDaySchedule.lessons);
-    const formattedSchedule: FormattedScheduleProps[] = [];
-
-    Object.entries(groupedLessons).forEach(([time, lessons]) => {
-      const matchingLesson = lessonsTimeNumber.find(
-        (el) => el.timeStart === time.substring(0, 8)
-      );
-      if (matchingLesson) {
-        lessons.length == 2
-          ? lessons.forEach((lesson, index) => {
-              const subgroup =
-                getSubgroup(lesson.subject_name) || (index === 0 ? 1 : 2);
-              formattedSchedule.push({
-                lessonNumber: matchingLesson.pairNumber,
-                subgroup,
-                lessonId: lesson.lesson_id,
-              });
-            })
-          : lessons.forEach((lesson, index) => {
-              const subgroup = getSubgroup(lesson.subject_name);
-              formattedSchedule.push({
-                lessonNumber: matchingLesson.pairNumber,
-                subgroup,
-                lessonId: lesson.lesson_id,
-              });
-            });
-      }
-    });
-
-    // Группировка данных по lessonNumber
-    const groupedData = formattedSchedule.reduce((acc, item) => {
-      const { lessonNumber, subgroup, lessonId } = item;
-
-      if (!acc[lessonNumber]) {
-        acc[lessonNumber] = {
-          lessonNumber,
-          subgroups: [],
-        };
-      }
-
-      acc[lessonNumber].subgroups.push({ subgroup, lessonId });
-
-      return acc;
-    }, {} as Record<number, { lessonNumber: number; subgroups: any[] }>);
-
-    // Преобразование объекта группировки в массив
-    const result = Object.values(groupedData);
-
-    return result;
-  };
-
-  const formattedSchedule = formatSchedule();
-  console.log("formattedSchedule", formattedSchedule);
-  console.log(students);
-
-  // Параметры пагинации
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(students.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const paginatedData = students.slice(startIndex, startIndex + rowsPerPage);
-  // Вычисление количества заполнителей для последней страницы
-  const placeholdersCount =
-    currentPage === totalPages ? rowsPerPage - paginatedData.length : 0;
-
-  // Состояния для отслеживания выбранных студентов и изменений
-  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
-  const [updatedMarks, setUpdatedMarks] = useState<
-    Record<number, Record<number, string>>
-  >({});
+  // Режим работы: true - изменение одного студента, false - изменение нескольких студентов
   const [isSingleEditMode, setIsSingleEditMode] = useState(false);
 
-  // Вспомогательные функции
-  const getStudentMarks = (studentId: number) => {
-    return attendanceLog
-      .filter((log) => log.student_id === studentId)
-      .reduce((marks, log) => {
-        marks[log.lesson_number] = log.status;
-        return marks;
-      }, {} as Record<number, string>);
-  };
+  const dailySchedule = getDailyScheduleByDate(currentInfo.currentDate);
+  let groupedLessons: GroupedLessons = {}; // Инициализация по умолчанию
 
-  const updateMarksForSelected = (
-    lesson: number,
-    value: string,
-    studentId?: number
-  ) => {
-    setUpdatedMarks((prev) => {
-      const updated = { ...prev };
-      console.log(updated);
-      if (studentId) {
-        if (!updated[studentId]) updated[studentId] = {};
-        updated[studentId][lesson] = value;
-      } else {
-        selectedStudents.forEach((id) => {
-          if (!updated[id]) updated[id] = {};
-          updated[id][lesson] = value;
-        });
-      }
-      return updated;
-    });
-  };
+  if (dailySchedule != null) {
+    groupedLessons = groupLessonsByTime(dailySchedule?.lessons);
+  }
 
-  const getChangedMarks = () => {
-    const changes: StudentMarkInfoProps[] = [];
-    students.forEach((student) => {
-      const studentId = student.student_id;
-      if (updatedMarks[studentId]) {
-        Object.entries(updatedMarks[studentId]).forEach(([lesson, value]) => {
-          const originalValue =
-            getStudentMarks(studentId)[parseInt(lesson)] || " ";
-          if (value !== originalValue) {
-            changes.push({
-              student_id: studentId,
-              day_schedule_id:
-                weekSchedule.days[
-                  (new Date(currentInfo.currentDate).getDay() + 6) % 7
-                ].day_id,
-              lesson_schedule_id: parseInt(lesson),
-              status: value,
-            });
+  const [studentAttendance, setStudentAttendance] = useState<
+    StudentAttendanceProps[]
+  >([]);
+
+  useEffect(() => {
+    const generateStudentAttendance = () => {
+      const attendanceList: StudentAttendanceProps[] = students.map(
+        (student) => {
+          const { student_id, subgroup, name, surname, tgid } = student;
+          const checkAttendanceRecord = attendanceLog.filter(
+            (log) =>
+              log.student_id === student_id && log.attendance_log.length !== 0
+          );
+
+          let studentLog: Attendance_logProps[] = [];
+
+          if (checkAttendanceRecord.length !== 0) {
+            studentLog = getAttendanceLogByStudentId(student_id);
+          } else if (dailySchedule != null) {
+            const logInfoArr: Attendance_logProps[] = [];
+            for (const [key, value] of Object.entries(groupedLessons)) {
+              let subject: DailyScheduleLessonProps | null = null;
+              switch (value.length) {
+                case 1:
+                  const les = value[0];
+                  if (!les.subject_name.includes(`п/г`)) subject = les;
+                  else if (les.subject_name.includes(`${subgroup} п/г`))
+                    subject = les;
+                  break;
+                case 2:
+                  const les1 = value[0];
+                  const les2 = value[1];
+                  subject = subgroup === 1 ? les1 : les2;
+                  break;
+              }
+
+              if (subject == null) {
+                continue;
+              }
+
+              const logInfo: Attendance_logProps = {
+                date: currentInfo.currentDate,
+                status: "",
+                subject_id: subject.subject_id,
+                day_id: dailySchedule.day_id,
+                lesson_id: subject?.lesson_id,
+              };
+
+              logInfoArr.push(logInfo);
+            }
+
+            studentLog = logInfoArr;
           }
-        });
-      }
-    });
-    return changes;
+
+          return {
+            student_id,
+            subgroup,
+            name,
+            surname,
+            tgid,
+            studentLog,
+          };
+        }
+      );
+
+      setStudentAttendance(attendanceList);
+    };
+
+    generateStudentAttendance();
+  }, [students, attendanceLog, dailySchedule]);
+
+  // Переключение режима работы
+  const toggleEditMode = () => {
+    setIsSingleEditMode((prev) => !prev);
   };
 
-  const saveChanges = async () => {
-    const changes = getChangedMarks();
-    if (changes.length === 0) {
-      console.log("Нет изменений для сохранения.");
-      return;
-    }
-    console.log(changes);
-    try {
-      const response = await attendanceApi.addAttendanceRecords(changes);
-      if (response.success) {
-        console.log("Изменения успешно сохранены:", response);
-      } else {
-        console.error("Ошибка при сохранении изменений:", response.error);
-      }
-    } catch (error) {
-      console.error("Ошибка при отправке запроса:", error);
-    }
-  };
-
-  // Обработчики событий
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
-
-  const handleStudentCheckboxChange = (studentId: number, checked: boolean) => {
-    setSelectedStudents((prev) =>
-      checked ? [...prev, studentId] : prev.filter((id) => id !== studentId)
+  // Обновление статуса посещаемости
+  const updateAttendanceStatus = (
+    studentId: number,
+    lessonId: number,
+    newStatus: string
+  ) => {
+    setStudentAttendance((prevAttendance) =>
+      prevAttendance.map((student) =>
+        student.student_id === studentId
+          ? {
+              ...student,
+              studentLog: student.studentLog.map((log) =>
+                log.lesson_id === lessonId ? { ...log, status: newStatus } : log
+              ),
+            }
+          : student
+      )
     );
   };
 
-  const toggleEditMode = () => {
-    setIsSingleEditMode((prev) => !prev);
-    setSelectedStudents([]);
-  };
+  function getAttendanceLogByStudentId(
+    studentId: number
+  ): Attendance_logProps[] {
+    const studentData = attendanceLog.find(
+      (log) => log.student_id === studentId
+    );
+    return studentData?.attendance_log || [];
+  }
+
+  function getDailyScheduleByDate(date: string): DailyScheduleProps | null {
+    const data = weekSchedule.days.find((schedule) => schedule.date === date);
+    return data || null;
+  }
 
   return (
     <div className={styles.container}>
-      {/* Кнопка переключения режима */}
+      {/* Заголовок */}
       <div className={styles.title}>
         <div className={styles.info}>
           <p>Посещаемость группы {userInfo.group}</p>
@@ -230,155 +168,94 @@ export default function AttendanceTable() {
           <p className={styles.numStudents}>{currentInfo.currentDate}</p>
         </div>
         <div className={styles.buttons}>
-          <div className={styles.buttonEditMode}>
-            <Button onClick={toggleEditMode} variant="auth">
-              {isSingleEditMode
-                ? "Одиночное редактирование"
-                : "Массовое редактирование"}
-            </Button>
-          </div>
-          <div className={styles.buttonSave}>
-            <Button onClick={saveChanges} variant="auth">
-              Сохранить изменения
-            </Button>
-          </div>
+          <Button onClick={toggleEditMode} variant="auth">
+            {isSingleEditMode
+              ? "Одиночное редактирование"
+              : "Массовое редактирование"}
+          </Button>
+          <Button variant="auth">Сохранить изменения</Button>
         </div>
       </div>
 
-      <Table>
+      {/* Таблица посещаемости */}
+      <Table className={styles.table}>
         <TableHeader>
           <TableRow>
-            <TableHead className={styles.studentCellHead}>
+            <TableHead
+              className={`${styles.studentCellHead} ${styles.studentCell}`}
+            >
               {!isSingleEditMode && (
-                <Checkbox
-                  className={styles.studentCheckbox}
-                  checked={selectedStudents.length === students.length}
-                  onCheckedChange={(checked) =>
-                    setSelectedStudents(
-                      checked ? students.map((s) => s.student_id) : []
-                    )
-                  }
-                />
+                <Checkbox className={styles.studentCheckbox} />
               )}
               Студенты
             </TableHead>
-
-            {formattedSchedule.map((lesson) => (
-              <TableHead key={lesson.lessonNumber}>
-                {lesson.lessonNumber}-я пара
-              </TableHead>
-            ))}
+            {groupedLessons &&
+              Object.keys(groupedLessons).map((key) => (
+                <TableHead key={key} className={styles.lessonCell}>
+                  {key}-я пара
+                </TableHead>
+              ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedData.map((student) => {
-            const isChecked = selectedStudents.includes(student.student_id);
-            const studentMarks = getStudentMarks(student.student_id);
+          {studentAttendance.map((att) => {
             return (
-              <TableRow key={student.student_id} className={styles.tableRow}>
-                {!isSingleEditMode && (
-                  <TableCell className={styles.studentCell}>
-                    <Checkbox
-                      className={styles.studentCheckbox}
-                      checked={isChecked}
-                      onCheckedChange={(checked) =>
-                        handleStudentCheckboxChange(
-                          student.student_id,
-                          !!checked
-                        )
-                      }
-                    />
-                    {student.surname} {student.name}
-                  </TableCell>
-                )}
-                {isSingleEditMode && (
-                  <TableCell className={styles.studentCell}>
-                    {student.surname} {student.name}
-                  </TableCell>
-                )}
-                {formattedSchedule.map((lesson) => {
-                  const mark =
-                    updatedMarks[student.student_id]?.[lesson.lessonNumber] ||
-                    studentMarks[lesson.lessonNumber] ||
-                    " ";
+              <TableRow key={att.student_id} className={styles.tableRow}>
+                <TableCell className={styles.studentCell}>
+                  {!isSingleEditMode && (
+                    <Checkbox className={styles.studentCheckbox} />
+                  )}
+                  {`${att.surname} ${att.name}`}
+                </TableCell>
+                {groupedLessons &&
+                  Object.keys(groupedLessons).map((key) => {
+                    const lessons = groupedLessons[key];
+                    const relevantLesson = lessons.find(
+                      (lesson) =>
+                        !lesson.subject_name.includes("п/г") ||
+                        lesson.subject_name.includes(`${att.subgroup} п/г`)
+                    );
 
-                  return (
-                    <TableCell key={lesson.lessonNumber}>
-                      <Select
-                        value={mark}
-                        onValueChange={(value) => {
-                          if (isSingleEditMode) {
-                            updateMarksForSelected(
-                              lesson.lessonNumber,
-                              value,
-                              student.student_id
-                            );
-                          } else if (selectedStudents.length > 0) {
-                            updateMarksForSelected(lesson.lessonNumber, value);
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-[90px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="П">П</SelectItem>
-                          <SelectItem value="Б">Б</SelectItem>
-                          <SelectItem value="УП">УП</SelectItem>
-                          <SelectItem value="Н">Н</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  );
-                })}
+                    const log = att.studentLog.find(
+                      (log) => log.lesson_id === relevantLesson?.lesson_id
+                    );
+
+                    return (
+                      <TableCell key={key} className={styles.lessonCell}>
+                        {relevantLesson ? (
+                          <Select
+                            value={log?.status || ""}
+                            onValueChange={(value) => {
+                              updateAttendanceStatus(
+                                att.student_id,
+                                relevantLesson.lesson_id,
+                                value
+                              );
+                            }}
+                          >
+                            <SelectTrigger className={styles.selectTrigger}>
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="П">Присутствует</SelectItem>
+                              <SelectItem value="Б">Болеет</SelectItem>
+                              <SelectItem value="УП">
+                                Уважительная причина
+                              </SelectItem>
+                              <SelectItem value="Н">Отсутствует</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className={styles.noLesson}>нет пары</span>
+                        )}
+                      </TableCell>
+                    );
+                  })}
               </TableRow>
             );
           })}
-          {/* Заполнители для последней страницы */}
-          {Array.from({ length: placeholdersCount }).map((_, index) => (
-            <TableRow
-              key={`placeholder-${index}`}
-              className={styles.placeholderRow}
-            >
-              <TableCell colSpan={formattedSchedule.length + 1}>
-                &nbsp;
-              </TableCell>
-            </TableRow>
-          ))}
         </TableBody>
       </Table>
-
-      {/* Пагинация */}
-      {students.length != 0 && (
-        <div className="flex justify-center mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(currentPage - 1)}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      isActive={currentPage === page}
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(currentPage + 1)}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
     </div>
   );
 }

@@ -231,10 +231,13 @@ const getByGroup = async (req, res) => {
           attendance_log (
             attendance_log_id,
             lesson_schedule (
+              lesson_schedule_id,
               subject_id,
               time_start
             ),
-            day_schedule (date),
+            day_schedule ( 
+            day_schedule_id, date
+            ),
             status
           )
         `
@@ -269,6 +272,8 @@ const getByGroup = async (req, res) => {
         date: log.day_schedule?.date || "Unknown",
         status: log.status || "Unknown",
         subject_id: log.lesson_schedule?.subject_id || "Unknown",
+        lesson_id: log.lesson_schedule?.lesson_schedule_id || "Unknown",
+        day_id: log.day_schedule?.day_schedule_id || "Unknown",
         attendance_log_id: log.attendance_log_id || "Unknown",
       }));
 

@@ -3,8 +3,6 @@ import { Navigate } from "react-router-dom";
 import { PuffLoader } from "react-spinners";
 import { getProtectedRouteData } from "@/utils/api/index";
 import { MyContext } from "@/hooks/MyContextProvider";
-import { error } from "console";
-
 export default function ProtectedRoute({
   children,
 }: {
@@ -22,7 +20,7 @@ export default function ProtectedRoute({
         if ("error" in response) {
           throw new Error(`${response.error}`);
         }
-        console.log(response);
+        // console.log(response);
         const { aud, email, group, role, name } = response.message;
         setUserInfo({ email, group, role, name });
         if (aud == "authenticated") setIsAuthenticated(true);

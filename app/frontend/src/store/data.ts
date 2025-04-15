@@ -1,12 +1,5 @@
-import { UserProps } from "@/types/user";
 import { DailyScheduleProps } from "@/types/schedule";
 import { AttendanceStatisticsProps } from "@/types/attendance";
-
-export const UserInfo: UserProps = {
-  role: "student",
-  userName: "Ильичев Виталий",
-  userEmail: "ilichevv_v845@mail.ru",
-};
 
 // export const dailySchedule: DailyScheduleProps = {
 //   dayOfWeek: "Monday",

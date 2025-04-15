@@ -24,11 +24,16 @@ export type AttendanceStatisticsProps = {
 
 export type AttendanceProps = {
   student_id: number;
+  attendance_log: Attendance_logProps[];
+};
+
+export type Attendance_logProps = {
   date: string;
-  lesson_number: number;
-  status: "Б" | "УП" | "Н";
+  status: "Б" | "УП" | "Н" | "П" | "";
   subject_id: number;
-  attendance_log_id: number;
+  day_id: number;
+  lesson_id: number;
+  attendance_log_id?: number;
 };
 
 export type lessonNumberProps = {

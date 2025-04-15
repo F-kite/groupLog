@@ -20,7 +20,6 @@ async function getAttendanceByGroup(group: string, date?: string) {
   }
   try {
     const response = await axios.get(strQuery);
-    console.log(response);
     return response.data;
   } catch (error) {
     console.error(error);

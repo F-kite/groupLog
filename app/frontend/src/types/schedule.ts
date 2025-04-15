@@ -2,6 +2,7 @@ export type DailyScheduleLessonProps = {
   lesson_id: number;
   time_start: string;
   time_end: string;
+  subject_id:number;
   subject_name: string;
   subject_type: string;
   teacher_name: string;
