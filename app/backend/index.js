@@ -42,7 +42,7 @@ import {
 
 import {
   attendanceArraySchemaToCreate,
-  attendanceSchemaToUpdate,
+  attendanceArraySchemaToUpdate,
 } from "./schemas/attendanceSchema.js";
 
 const app = express();
@@ -163,8 +163,8 @@ app.post(
   attendanceApi.create
 );
 app.put(
-  "/api/attendances/:id",
-  validate(attendanceSchemaToUpdate),
+  "/api/attendances",
+  validate(attendanceArraySchemaToUpdate),
   attendanceApi.update
 );
 app.delete("/api/attendances/:id", attendanceApi.remove);

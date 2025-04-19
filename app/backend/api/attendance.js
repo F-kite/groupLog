@@ -338,50 +338,79 @@ const getByStudent = async (req, res) => {
 };
 
 const update = async (req, res) => {
-  const { id } = req.params;
-  const { status, day_schedule_id } = req.body;
+  const records = req.body;
 
   // Валидация входных данных
-  if (!status || !day_schedule_id) {
-    return res.status(400).json({ error: "Missing required fields" });
+  if (!Array.isArray(records) || records.length === 0) {
+    return res.status(400).json({ error: "Invalid or empty records array" });
   }
 
-  // Проверка существования записи
-  const { data: log, error: logError } = await supabase
-    .from("attendance_log")
-    .select("attendance_log_id")
-    .eq("attendance_log_id", id)
-    .single();
+  const errors = [];
 
-  if (logError || !log) {
-    console.error(logError);
-    return res.status(400).json({ error: "Attendance log not found" });
+  for (const record of records) {
+    const { status, day_schedule_id, lesson_schedule_id, student_id } = record;
+
+    try {
+      // Валидация полей для каждой записи
+      if (!status || !day_schedule_id || !lesson_schedule_id || !student_id) {
+        errors.push({
+          status,
+          day_schedule_id,
+          lesson_schedule_id,
+          student_id,
+          message: "There is error",
+        });
+        continue;
+      }
+
+      // Проверка существования записи
+      const { data: log, error: logError } = await supabase
+        .from("attendance_log")
+        .select("attendance_log_id")
+        .eq("student_id", student_id)
+        .eq("lesson_schedule_id", lesson_schedule_id)
+        .eq("day_schedule_id", day_schedule_id)
+        .single();
+
+      if (log.status == status) {
+        errors.push({
+          status,
+          day_schedule_id,
+          lesson_schedule_id,
+          student_id,
+          message: "It is not a new record",
+        });
+        continue;
+      }
+
+      if (logError || !log) {
+        console.error(logError);
+        return res.status(400).json({ error: "Attendance log not found" });
+      }
+
+      // Обновление записи
+      const { data, error } = await supabase
+        .from("attendance_log")
+        .update({ status })
+        .eq("attendance_log_id", log.attendance_log_id)
+        .select();
+
+      if (error) {
+        throw new Error({ error: "Failed to update attendance log" });
+      }
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: error.message });
+    }
   }
 
-  // Проверка существования дня расписания
-  const { data: day, error: dayError } = await supabase
-    .from("day_schedule")
-    .select("day_schedule_id")
-    .eq("day_schedule_id", day_schedule_id)
-    .single();
-
-  if (dayError || !day) {
-    return res.status(400).json({ error: "Day schedule not found" });
-  }
-
-  // Обновление записи
-  const { data, error } = await supabase
-    .from("attendance_log")
-    .update({ status, day_schedule_id })
-    .eq("attendance_log_id", id)
-    .select();
-
-  if (error) {
-    console.error(error.message);
-    return res.status(500).json({ error: "Failed to update attendance log" });
-  }
-
-  return res.status(200).json(data);
+  if (errors.length > 0)
+    return res
+      .status(200)
+      .json({ message: `Attendance log updated partially` });
+  return res
+    .status(200)
+    .json({ message: `Attendance log updated successfully` });
 };
 
 const remove = async (req, res) => {

@@ -41,6 +41,11 @@ export const attendanceSchemaToUpdate = Joi.object({
     "any.only":
       "Поле 'status' должно быть одним из значений: 'П','Б', 'Н', 'УП' .",
   }),
+  student_id: Joi.number().integer().positive().required().messages({
+    "any.required": "Поле 'student_id' обязательно для заполнения.",
+    "number.base": "Поле 'student_id' должно быть числом.",
+    "number.positive": "Поле 'student_id' должно быть положительным числом.",
+  }),
   day_schedule_id: Joi.number().integer().positive().required().messages({
     "any.required": "Поле 'day_schedule_id' обязательно для заполнения.",
     "number.base": "Поле 'day_schedule_id' должно быть числом.",
@@ -58,4 +63,13 @@ export const attendanceSchemaToUpdate = Joi.object({
   .messages({
     "object.missing":
       "Хотя бы одно из полей 'status', 'day_schedule_id' или 'lesson_schedule_id' должно быть указано.",
+  });
+
+  export const attendanceArraySchemaToUpdate = Joi.array()
+  .items(attendanceSchemaToUpdate)
+  .min(1)
+  .required()
+  .messages({
+    "array.min": "Массив должен содержать хотя бы одну запись",
+    "array.base": "Ожидался массив записей",
   });

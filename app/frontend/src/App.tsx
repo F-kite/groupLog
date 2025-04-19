@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./app/login/page.tsx";
 import RegisterPage from "./app/register/page.tsx";
@@ -9,12 +9,18 @@ import ErrorPageNotFound from "./pages/ErrorPages/404Page.tsx";
 import ErrorServerUnavailable from "./pages/ErrorPages/503Page.tsx";
 
 import ProtectedRoute from "../middleware.tsx";
-import { MyContextProvider } from "@/hooks/MyContextProvider.tsx";
+import { MyContext, MyContextProvider } from "@/hooks/MyContextProvider.tsx";
 import { checkServer } from "@/utils/api/index.ts";
 import "./App.css";
 
 export default function App() {
   const [isServerDown, setIsServerDown] = useState<boolean>();
+  const context = useContext(MyContext);
+
+  if (!context) {
+    throw new Error("MyContext must be used within a MyProvider");
+  }
+  const { userInfo } = context;
 
   useEffect(() => {
     const performCheck = async () => {
@@ -68,8 +74,22 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/attendance"
+          {(userInfo.role == "student" || userInfo.role == "teacher") && (
+            <Route
+              path="/attendance"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <AttendanceTable />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+          )}
+
+          {userInfo.role == "administrator" && (
+            <Route
+            path="/adminpanel"
             element={
               <ProtectedRoute>
                 <MainLayout>
@@ -78,6 +98,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          )}
         </Routes>
       </BrowserRouter>
     </MyContextProvider>

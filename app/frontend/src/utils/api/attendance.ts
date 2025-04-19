@@ -51,10 +51,33 @@ async function addAttendanceRecords(data: StudentMarkInfoProps[]) {
     return { error: "Неизвестная ошибка" };
   }
 }
+async function updateAttendanceRecords(data: StudentMarkInfoProps[]) {
+  const sentData = JSON.stringify(data);
+  try {
+    const response = await axios.put(serverAttendanceURL, sentData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.data) {
+      return { success: response.data.message };
+    }
+    return { error: "Неизвестная ошибка: пустой ответ от сервера" };
+  } catch (error) {
+    console.error(error);
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || "Ошибка запроса" };
+    } else if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: "Неизвестная ошибка" };
+  }
+}
 
 const attendanceApi = {
   getAttendanceByGroup,
   addAttendanceRecords,
+  updateAttendanceRecords,
 };
 
 export default attendanceApi;

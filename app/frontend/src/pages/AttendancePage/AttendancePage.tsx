@@ -17,11 +17,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { MyContext } from "@/hooks/MyContextProvider";
+import { groupLessonsByTime, GroupedLessons } from "@/hooks/groupLessonsByTime";
 import { DailyScheduleProps, DailyScheduleLessonProps } from "@/types/schedule";
 import { StudentsProps } from "@/types/student";
 import { Attendance_logProps } from "@/types/attendance";
+import { StudentMarkInfoProps } from "@/types/student";
+import attendanceApi from "@/utils/api/attendance";
 import styles from "./styles.module.scss";
-import { groupLessonsByTime, GroupedLessons } from "@/hooks/groupLessonsByTime";
 
 type StudentAttendanceProps = Omit<
   StudentsProps,
@@ -40,6 +42,8 @@ export default function AttendanceTable() {
 
   // Режим работы: true - изменение одного студента, false - изменение нескольких студентов
   const [isSingleEditMode, setIsSingleEditMode] = useState(false);
+
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
 
   const dailySchedule = getDailyScheduleByDate(currentInfo.currentDate);
   let groupedLessons: GroupedLessons = {}; // Инициализация по умолчанию
@@ -122,6 +126,53 @@ export default function AttendanceTable() {
   // Переключение режима работы
   const toggleEditMode = () => {
     setIsSingleEditMode((prev) => !prev);
+    setSelectedStudents([]); // Очищаем выбранных студентов
+  };
+
+  //Сохранение изменений
+  const saveHandler = async () => {
+    const requestData: StudentMarkInfoProps[] = [];
+    const differences = findDifferences(studentAttendance, attendanceLog);
+
+    console.log(differences);
+    if (differences.length > 0) {
+      const requestResult = await attendanceApi.updateAttendanceRecords(
+        differences
+      );
+      if (requestResult.error) {
+        console.error(requestResult.error);
+      }
+      alert(requestResult.success);
+      return;
+    }
+
+    studentAttendance.map((student) => {
+      student.studentLog.map((log) => {
+        if (log.status !== "" && dailySchedule != null) {
+          const record = {
+            student_id: student.student_id,
+            lesson_schedule_id: log.lesson_id,
+            status: log.status,
+            day_schedule_id: dailySchedule.day_id,
+          };
+
+          requestData.push(record);
+        }
+      });
+    });
+
+    console.log("requestData :", requestData);
+
+    if (requestData.length !== 0) {
+      console.log("Запрос отправлен");
+      const requestResult = await attendanceApi.addAttendanceRecords(
+        requestData
+      );
+      if (requestResult.error) {
+        console.error(requestResult.error);
+      }
+      console.info(requestResult.success);
+    }
   };
 
   // Обновление статуса посещаемости
@@ -130,15 +181,39 @@ export default function AttendanceTable() {
     lessonId: number,
     newStatus: string
   ) => {
+    console.log(studentId, lessonId, newStatus);
     setStudentAttendance((prevAttendance) =>
       prevAttendance.map((student) =>
         student.student_id === studentId
-          ? {
+          ? ({
               ...student,
               studentLog: student.studentLog.map((log) =>
                 log.lesson_id === lessonId ? { ...log, status: newStatus } : log
               ),
-            }
+            } as StudentAttendanceProps)
+          : student
+      )
+    );
+    console.log(studentAttendance);
+  };
+
+  //выбор отмеченных студентов
+  const handleStudentCheckboxChange = (studentId: number, checked: boolean) => {
+    setSelectedStudents((prev) =>
+      checked ? [...prev, studentId] : prev.filter((id) => id !== studentId)
+    );
+  };
+
+  const updateMarksForSelected = (lessonId: number, newStatus: string) => {
+    setStudentAttendance((prevAttendance) =>
+      prevAttendance.map((student) =>
+        selectedStudents.includes(student.student_id)
+          ? ({
+              ...student,
+              studentLog: student.studentLog.map((log) =>
+                log.lesson_id === lessonId ? { ...log, status: newStatus } : log
+              ),
+            } as StudentAttendanceProps)
           : student
       )
     );
@@ -158,6 +233,44 @@ export default function AttendanceTable() {
     return data || null;
   }
 
+  // Функция для сравнения объектов
+  function findDifferences(
+    firstObject: typeof studentAttendance,
+    secondObject: typeof attendanceLog
+  ) {
+    const differences: any = [];
+
+    const attendanceLogMap = new Map<number, any>();
+    secondObject.forEach((student) => {
+      attendanceLogMap.set(student.student_id, student.attendance_log);
+    });
+
+    firstObject.forEach((student) => {
+      const studentId = student.student_id;
+      const logsFromSecondObject = attendanceLogMap.get(studentId) || [];
+
+      student.studentLog.forEach((log) => {
+        const match = logsFromSecondObject.find(
+          (el: any) =>
+            el.subject_id === log.subject_id &&
+            el.lesson_id === log.lesson_id &&
+            el.date === log.date
+        );
+
+        if (!match || match.status !== log.status) {
+          differences.push({
+            student_id: studentId,
+            lesson_schedule_id: log.lesson_id,
+            status: log.status,
+            day_schedule_id: log.day_id,
+          });
+        }
+      });
+    });
+
+    return differences;
+  }
+
   return (
     <div className={styles.container}>
       {/* Заголовок */}
@@ -173,19 +286,31 @@ export default function AttendanceTable() {
               ? "Одиночное редактирование"
               : "Массовое редактирование"}
           </Button>
-          <Button variant="auth">Сохранить изменения</Button>
+          <Button onClick={saveHandler} variant="auth">
+            Сохранить изменения
+          </Button>
         </div>
       </div>
 
       {/* Таблица посещаемости */}
       <Table className={styles.table}>
         <TableHeader>
-          <TableRow>
+          <TableRow className={styles.tableRow}>
             <TableHead
               className={`${styles.studentCellHead} ${styles.studentCell}`}
             >
               {!isSingleEditMode && (
-                <Checkbox className={styles.studentCheckbox} />
+                <Checkbox
+                  className={styles.studentCheckbox}
+                  onCheckedChange={(checked) =>
+                    studentAttendance.map((student) => {
+                      handleStudentCheckboxChange(
+                        student.student_id,
+                        !!checked
+                      );
+                    })
+                  }
+                />
               )}
               Студенты
             </TableHead>
@@ -203,7 +328,13 @@ export default function AttendanceTable() {
               <TableRow key={att.student_id} className={styles.tableRow}>
                 <TableCell className={styles.studentCell}>
                   {!isSingleEditMode && (
-                    <Checkbox className={styles.studentCheckbox} />
+                    <Checkbox
+                      className={styles.studentCheckbox}
+                      checked={selectedStudents.includes(att.student_id)}
+                      onCheckedChange={(checked) =>
+                        handleStudentCheckboxChange(att.student_id, !!checked)
+                      }
+                    />
                   )}
                   {`${att.surname} ${att.name}`}
                 </TableCell>
@@ -226,11 +357,18 @@ export default function AttendanceTable() {
                           <Select
                             value={log?.status || ""}
                             onValueChange={(value) => {
-                              updateAttendanceStatus(
-                                att.student_id,
-                                relevantLesson.lesson_id,
-                                value
-                              );
+                              if (isSingleEditMode) {
+                                updateAttendanceStatus(
+                                  att.student_id,
+                                  relevantLesson.lesson_id,
+                                  value
+                                );
+                              } else if (selectedStudents.length > 0) {
+                                updateMarksForSelected(
+                                  relevantLesson.lesson_id,
+                                  value
+                                );
+                              }
                             }}
                           >
                             <SelectTrigger className={styles.selectTrigger}>
