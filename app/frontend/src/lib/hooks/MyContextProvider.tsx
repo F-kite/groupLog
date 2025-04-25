@@ -1,8 +1,8 @@
 import React, { createContext, useState } from "react";
-import { StudentsProps } from "@/types/student";
-import { WeekScheduleProps } from "@/types/schedule";
-import { AttendanceProps } from "@/types/attendance";
-import { CurrentInfoProps, UserInfoProps } from "@/types/user";
+import { StudentsProps } from "@/lib/types/student";
+import { WeekScheduleProps } from "@/lib/types/schedule";
+import { AttendanceProps } from "@/lib/types/attendance";
+import { CurrentInfoProps, UserInfoProps } from "@/lib/types/user";
 
 interface MyContextProps {
   userInfo: UserInfoProps;

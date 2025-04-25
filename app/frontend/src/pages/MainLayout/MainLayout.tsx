@@ -4,10 +4,12 @@ import { ReactNode } from "react";
 import Footer from "@/components/Footer/Footer";
 
 import { useContext, useEffect } from "react"; // Добавляем useState
-import { MyContext } from "@/hooks/MyContextProvider";
-import studentApi from "@/utils/api/students";
-import scheduleApi from "@/utils/api/schedule";
-import attendanceApi from "@/utils/api/attendance";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
+import studentApi from "@/lib/api/students";
+import scheduleApi from "@/lib/api/schedule";
+import attendanceApi from "@/lib/api/attendance";
+import AdminPanel from "@/components/AdminPanel/AdminPanel";
+import userApi from "@/lib/api/users";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const context = useContext(MyContext);
@@ -15,83 +17,99 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
-  const { userInfo, currentInfo } = context;
+  const { userInfo, setUserInfo, currentInfo } = context;
   const { students, setStudents } = context;
   const { weekSchedule, setWeekSchedule } = context;
   const { attendanceLog, setAttendanceLog } = context;
 
-  if (userInfo.group != null && userInfo.group != undefined) {
-    useEffect(() => {
-      const fetchStudentsData = async () => {
-        try {
-          const studentsResponse = await studentApi.getStudentsByGroup(
-            userInfo.group
-          );
-          if (studentsResponse.error) {
-            throw new Error(studentsResponse.error);
-          }
-          setStudents(studentsResponse);
-        } catch (error) {
-          console.error(error);
+  useEffect(() => {
+    const getUserInformation = async () => {
+      try {
+        const response = await userApi.getUserInfo();
+        if (response.error) {
+          console.error("Ошибка:", response.error);
+          throw new Error(response.error);
         }
-      };
-
-      fetchStudentsData();
-    }, [userInfo.group, setStudents]);
-
-    useEffect(() => {
-      const fetchScheduleData = async () => {
-        try {
-          const scheduleResponse = await scheduleApi.getWeekSchedule(
-            userInfo.group,
-            currentInfo.currentWeeksNumber
-          );
-          if (scheduleResponse.error) {
-            throw new Error(scheduleResponse.error);
-          }
-          setWeekSchedule(scheduleResponse);
-        } catch (error: any) {
-          setWeekSchedule({
-            week_number: 0,
-            start_date: "",
-            end_date: "",
-            days: [],
-          });
-          console.error(error);
-        }
-      };
-
-      if (userInfo.group && currentInfo.currentWeeksNumber) {
-        fetchScheduleData();
+        setUserInfo({ ...userInfo, ...response });
+      } catch (error) {
+        console.error("Не удалось выполнить проверку:", error);
       }
-    }, [
-      currentInfo,
-      userInfo.group,
-      currentInfo.currentWeeksNumber,
-      setWeekSchedule,
-    ]);
+    };
 
-    useEffect(() => {
-      const fetchAttendanceData = async () => {
-        try {
-          const attendanceResponse = await attendanceApi.getAttendanceByGroup(
-            userInfo.group,
-            currentInfo.currentDate
-          );
-          if (attendanceResponse.error) {
-            throw new Error(attendanceResponse.error);
-          }
-          setAttendanceLog(attendanceResponse);
-        } catch (error: any) {
-          console.error(error);
+    getUserInformation();
+  }, [setUserInfo]);
+
+  useEffect(() => {
+    const fetchStudentsData = async () => {
+      try {
+        const studentsResponse = await studentApi.getStudentsByGroup(
+          userInfo.group
+        );
+        if (studentsResponse.error) {
+          throw new Error(studentsResponse.error);
         }
-      };
-
-      if (userInfo.group && currentInfo.currentDate) {
-        fetchAttendanceData();
+        setStudents(studentsResponse);
+      } catch (error) {
+        console.error(error);
       }
-    }, [userInfo.group, currentInfo.currentDate, setAttendanceLog]);
-  }
+    };
+
+    if (userInfo.group) fetchStudentsData();
+  }, [userInfo.group, setStudents]);
+
+  useEffect(() => {
+    const fetchScheduleData = async () => {
+      try {
+        const scheduleResponse = await scheduleApi.getWeekSchedule(
+          userInfo.group,
+          currentInfo.currentWeeksNumber
+        );
+        if (scheduleResponse.error) {
+          throw new Error(scheduleResponse.error);
+        }
+        setWeekSchedule(scheduleResponse);
+      } catch (error: any) {
+        setWeekSchedule({
+          week_number: 0,
+          start_date: "",
+          end_date: "",
+          days: [],
+        });
+        console.error(error);
+      }
+    };
+
+    if (userInfo.group && currentInfo.currentWeeksNumber) {
+      fetchScheduleData();
+    }
+  }, [
+    currentInfo,
+    userInfo.group,
+    currentInfo.currentWeeksNumber,
+    setWeekSchedule,
+  ]);
+
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      try {
+        const attendanceResponse = await attendanceApi.getAttendanceByGroup(
+          userInfo.group,
+          currentInfo.currentDate
+        );
+        if (attendanceResponse.error) {
+          throw new Error(attendanceResponse.error);
+        }
+        setAttendanceLog(attendanceResponse);
+      } catch (error: any) {
+        console.error(error);
+      }
+    };
+
+    if (userInfo.group && currentInfo.currentDate) {
+      fetchAttendanceData();
+    }
+  }, [userInfo.group, currentInfo.currentDate, setAttendanceLog]);
+
   console.log({
     userInfo,
     currentInfo,
@@ -105,7 +123,14 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       <header>
         <Header />
       </header>
-      <main>{children}</main>
+      {userInfo.role == "administrator" ? (
+        <main>
+          <AdminPanel />
+        </main>
+      ) : (
+        <main>{children}</main>
+      )}
+
       <footer>
         <Footer />
       </footer>

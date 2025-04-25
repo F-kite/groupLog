@@ -7,7 +7,6 @@ async function getStudentsByGroup(group: string) {
     const response = await axios.get(`${serverStudentsURL}/groups/${group}`);
     return response.data;
   } catch (error: any) {
-    console.error(error);
     if (error instanceof Error) {
       return { error: error.message };
     }

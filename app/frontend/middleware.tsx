@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { PuffLoader } from "react-spinners";
-import { getProtectedRouteData } from "@/utils/api/index";
-import { MyContext } from "@/hooks/MyContextProvider";
+import { getProtectedRouteData } from "@/lib/api/index";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
 export default function ProtectedRoute({
   children,
 }: {
@@ -11,7 +11,7 @@ export default function ProtectedRoute({
   const context = useContext(MyContext);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { setUserInfo } = context;
+  const { userInfo, setUserInfo } = context;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -20,10 +20,12 @@ export default function ProtectedRoute({
         if ("error" in response) {
           throw new Error(`${response.error}`);
         }
-        // console.log(response);
-        const { aud, email, group, role, name } = response.message;
-        setUserInfo({ email, group, role, name });
-        if (aud == "authenticated") setIsAuthenticated(true);
+
+        const { aud, email } = response.message;
+        if (aud == "authenticated") {
+          setUserInfo({ ...userInfo, email });
+          setIsAuthenticated(true);
+        }
       } catch (error: any) {
         console.error(error.message);
         setIsAuthenticated(false);

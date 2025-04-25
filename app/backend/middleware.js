@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import supabase from "./supabase/index.js";
+import { emailSchema } from "./schemas/userSchema.js";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ async function getAuthUser(authToken) {
 }
 
 async function getUserInfo(email) {
+  let result = {};
   try {
     const { data, error } = await supabase
       .from("users")
@@ -30,17 +32,6 @@ async function getUserInfo(email) {
 
     if (error) {
       console.error(error.message);
-      return null;
-    }
-
-    const { data: group, error: fetchGroupError } = await supabase
-      .from("group")
-      .select("name")
-      .eq("group_id", data.assigned_group)
-      .single();
-
-    if (fetchGroupError) {
-      console.error(fetchGroupError.message);
       return null;
     }
 
@@ -54,11 +45,31 @@ async function getUserInfo(email) {
       console.error(fetchRoleError.message);
       return null;
     }
-    const result = {
-      name: data.name,
-      group: group.name,
-      role: role.name,
-    };
+
+    if (role.name != "administrator") {
+      const { data: group, error: fetchGroupError } = await supabase
+        .from("group")
+        .select("name")
+        .eq("group_id", data.assigned_group)
+        .single();
+
+      if (fetchGroupError) {
+        console.error(fetchGroupError.message);
+        return null;
+      }
+
+      result = {
+        name: data.name,
+        group: group.name,
+        role: role.name,
+      };
+    } else {
+      result = {
+        name: data.name,
+        role: role.name,
+      };
+    }
+
     return result;
   } catch (error) {
     console.error(error);
@@ -92,9 +103,17 @@ export const authMiddleware = async (req, res, next) => {
 
     if (authToken && refreshToken) {
       const authUserInfo = await getAuthUser(authToken);
+      if (!authUserInfo) {
+        console.error("Не удалось получить информацию о пользователе");
+        return res.status(401).json({ error: "Invalid auth token" });
+      }
       const { aud, email } = authUserInfo;
-      const userGroupAndRole = await getUserInfo(email);
-      req.user = { aud, email, ...userGroupAndRole };
+      // const userGroupAndRole = await getUserInfo(email);
+      // if (!userGroupAndRole) {
+      //   console.error("Не удалось получить информацию о группе и роли");
+      //   return res.status(401).json({ error: "User info not found" });
+      // }
+      req.user = { aud, email };
       return next();
     }
 
@@ -131,8 +150,8 @@ export const authMiddleware = async (req, res, next) => {
 
       const authUserInfo = await getAuthUser(authToken);
       const { aud, email } = authUserInfo;
-      const userGroupAndRole = await getUserInfo(email);
-      req.user = { aud, email, ...userGroupAndRole };
+      // const userGroupAndRole = await getUserInfo(email);
+      req.user = { aud, email };
       return next();
     }
   } catch (error) {

@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/accordion";
 
 import photo from "/image/cardBackground/19.jpg";
-import { DailyScheduleLessonProps } from "@/types/schedule";
+import { DailyScheduleLessonProps } from "@/lib/types/schedule";
 import styles from "./styles.module.scss";
 import { Card, CardContent } from "../ui/card";
 

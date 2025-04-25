@@ -366,26 +366,27 @@ const update = async (req, res) => {
       // Проверка существования записи
       const { data: log, error: logError } = await supabase
         .from("attendance_log")
-        .select("attendance_log_id")
+        .select("*")
         .eq("student_id", student_id)
         .eq("lesson_schedule_id", lesson_schedule_id)
         .eq("day_schedule_id", day_schedule_id)
         .single();
 
-      if (log.status == status) {
+      if (logError || !log) {
+        console.error(logError);
+        return res.status(400).json({ error: "Attendance log not found" });
+      }
+
+      if (log != null && log.status == status) {
         errors.push({
-          status,
+          oldStatus: log.status,
+          newStatus: status,
           day_schedule_id,
           lesson_schedule_id,
           student_id,
           message: "It is not a new record",
         });
         continue;
-      }
-
-      if (logError || !log) {
-        console.error(logError);
-        return res.status(400).json({ error: "Attendance log not found" });
       }
 
       // Обновление записи
@@ -404,10 +405,12 @@ const update = async (req, res) => {
     }
   }
 
-  if (errors.length > 0)
+  if (errors.length > 0) {
+    console.log(errors);
     return res
       .status(200)
       .json({ message: `Attendance log updated partially` });
+  }
   return res
     .status(200)
     .json({ message: `Attendance log updated successfully` });

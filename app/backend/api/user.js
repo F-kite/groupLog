@@ -4,24 +4,79 @@ import { emailSchema, usernameSchema } from "../schemas/userSchema.js";
 
 // метод для получения данных пользователя из базы при наличии аутентифицированного пользователя
 // объект, возвращаемый методом `auth.user`, извлекается из локального хранилища
-const getByEmail = async (req, res) => {
-  const user = supabase.auth.user();
-  console.debug(user);
-  const { email } = req.params;
+const getUserInfo = async (req, res) => {
+  const authToken = req.cookies.authToken;
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(authToken);
+
   if (user) {
+    const email = user.email;
     try {
-      const { data, error } = await supabase
-        .from("user")
-        .select("*")
+      const { data: userInfo, error: userInfoError } = await supabase
+        .from("users")
+        .select(
+          `
+          name,
+          user_role(name),
+          assigned_group,
+          group(name)
+          `
+        )
         .eq("email", email)
         .single();
+
+      if (userInfoError) {
+        console.error(userInfoError.message);
+        throw new Error(userInfoError.message);
+      }
+      let data = {};
+
+      if (userInfo && userInfo.assigned_group === null) {
+        data = {
+          name: userInfo.name,
+          group: null,
+          role: userInfo.user_role.name,
+        };
+      } else {
+        data = {
+          name: userInfo.name,
+          group: userInfo.group?.name,
+          role: userInfo.user_role.name,
+        };
+      }
+
+      return res.status(200).json(data);
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ error: error.message || "Failed to get user" });
+    }
+  }
+  return null;
+};
+
+const getAllUsers = async (req, res) => {
+  const authToken = req.cookies.authToken;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser(authToken);
+  if (user) {
+    try {
+      const { data: userInfo, error } = await supabase
+        .from("users")
+        .select(
+          `user_id, user_role(name), name, email, group(name), created_at`
+        );
 
       if (error) {
         console.error(error.message);
         return res.status(500).json({ error: "Failed to get user" });
       }
 
-      return res.status(200).json(data);
+      return res.status(200).json(userInfo);
     } catch (error) {
       console.error(error);
     }
@@ -36,7 +91,7 @@ const registration = async (req, res) => {
   try {
     //Существует ли пользователь с такой почтой
     const { data: userEmail } = await supabase
-      .from("user")
+      .from("users")
       .select("*")
       .eq("email", email)
       .single();
@@ -48,7 +103,7 @@ const registration = async (req, res) => {
     }
     //Существует ли пользователь с таким именем
     const { data: userName } = await supabase
-      .from("user")
+      .from("users")
       .select("*")
       .eq("name", name)
       .single();
@@ -74,7 +129,7 @@ const registration = async (req, res) => {
     };
 
     const { data: profile, error: profileError } = await supabase
-      .from("user")
+      .from("users")
       .insert([{ ...profileData }]);
 
     if (profileError) {
@@ -105,7 +160,7 @@ const login = async (req, res) => {
       email = userLogin;
     } else if (isUsername) {
       const { data: userEmail, error: userError } = await supabase
-        .from("user")
+        .from("users")
         .select("email")
         .eq("name", userLogin)
         .limit(1)
@@ -165,13 +220,31 @@ const login = async (req, res) => {
 // Выход из системы
 const logout = async (req, res) => {
   try {
+    const authToken = req.cookies.authToken;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser(authToken);
+
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+
+    // Уничтожение сессии
+    if (req.session) {
+      console.log(req.session);
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Ошибка при уничтожении сессии:", err);
+          return res.status(500).json({ error: "Ошибка при выходе" });
+        }
+      });
+    }
+
     res.clearCookie("authToken"); // Удаление access-токена
     res.clearCookie("refreshToken"); // Удаление refresh-токена
-    return res.status(200).json({ message: "Успешно" });
+    console.info(`User ${user.email} log out`);
+    return res.status(200).json("Успешно");
   } catch (err) {
-    throw err;
+    return res.status(500).json("Ошибка при выходе");
   }
 };
 
@@ -182,7 +255,7 @@ const update = async (req, res) => {
   const { data } = req.body;
   try {
     const { data: _user, error } = await supabase
-      .from("user")
+      .from("users")
       .update(data)
       .match({ id: user.id })
       .single();
@@ -199,7 +272,7 @@ const remove = async (req, res) => {
 
   //Существует ли пользователь с таким email
   const { data: userCheck } = await supabase
-    .from("user")
+    .from("users")
     .select("*")
     .eq("email", email)
     .single();
@@ -210,7 +283,7 @@ const remove = async (req, res) => {
       .json({ error: "Invalid email. User with this email not found." });
   }
 
-  const { error } = await supabase.from("user").delete().eq("email", email);
+  const { error } = await supabase.from("users").delete().eq("email", email);
 
   if (error) {
     console.error(error.message);
@@ -270,7 +343,8 @@ const uploadAvatar = async (file) => {
 };
 
 const userApi = {
-  getByEmail,
+  getUserInfo,
+  getAllUsers,
   registration,
   login,
   logout,

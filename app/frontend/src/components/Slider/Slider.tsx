@@ -7,9 +7,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-import { lessonsTimeNumber } from "@/store/data";
-import { groupLessonsByTime } from "@/hooks/groupLessonsByTime";
-import { MyContext } from "@/hooks/MyContextProvider";
+import { lessonsTimeNumber } from "@/lib/store/data";
+import { groupLessonsByTime } from "@/lib/hooks/groupLessonsByTime";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
 import LessonCard from "./LessonCard";
 import styles from "./styles.module.scss";
 

@@ -5,7 +5,7 @@ async function GetAllData() {
   try {
     // пользователи
     const { data: users, error: usersError } = await supabase
-      .from("user")
+      .from("users")
       .select("*");
 
     // студенты

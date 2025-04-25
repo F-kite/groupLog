@@ -1,5 +1,8 @@
-import { DailyScheduleLessonProps, DailyScheduleProps } from "@/types/schedule";
-import { lessonsTimeNumber } from "@/store/data";
+import {
+  DailyScheduleLessonProps,
+  DailyScheduleProps,
+} from "@/lib/types/schedule";
+import { lessonsTimeNumber } from "@/lib/store/data";
 
 type Lesson = DailyScheduleProps["lessons"][0];
 export type GroupedLessons = { [pairNum: string]: DailyScheduleLessonProps[] };

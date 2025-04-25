@@ -88,8 +88,9 @@ put - обновление записи
 */
 
 //Админка
-app.get("api/admin/users", userApi.getByEmail);
-app.delete("api/admin/users", validate(userDeleteSchema), userApi.remove);
+app.get("/api/admin/users/:email", userApi.getUserInfo);
+app.get("/api/admin/users", userApi.getAllUsers);
+app.delete("/api/admin/users", validate(userDeleteSchema), userApi.remove);
 
 //Расписание
 app.get("/api/schedule/:group/:week", scheduleApi.getWeeklySchedule);
@@ -97,6 +98,7 @@ app.get("/api/schedule/:group/:week/:day", scheduleApi.getDailySchedule);
 app.post("/api/schedule/:group/:week", scheduleApi.createSchedule);
 
 //Пользователь
+app.get("/api/users", userApi.getUserInfo);
 app.post(
   "/api/users/registration",
   validate(userRegisterSchema),

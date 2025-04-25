@@ -1,0 +1,20 @@
+.container {
+  min-width: 70%;
+  margin: 0 auto;
+}
+
+.tableCell,
+.headerCell {
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.cellButtons {
+  float: right;
+  display: flex;
+
+  .button {
+    margin-left: 1rem;
+  }
+}

@@ -3,10 +3,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut } from "lucide-react";
 import styles from "./styles.module.scss";
 
-import { useResize } from "@/hooks/useResize";
+import { useResize } from "@/lib/hooks/useResize";
 
-import userApi from "@/utils/api/users";
-import { MyContext } from "@/hooks/MyContextProvider";
+import userApi from "@/lib/api/users";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
 
 const navItems = [
   { name: "Главная", href: "/" },
@@ -15,13 +15,15 @@ const navItems = [
   { name: "Расписание", href: "/schedule" },
 ];
 
+const navItemsForAdmin = [{ name: "Админ-панель", href: "/" }];
+
 export default function Header() {
   const context = useContext(MyContext);
 
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
-  const { userInfo } = context;
+  const { userInfo, setUserInfo } = context;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -32,16 +34,20 @@ export default function Header() {
   const userName = userInfo.name;
   const userEmail = userInfo.email;
 
+  const navBar = userInfo.role == "administrator" ? navItemsForAdmin : navItems;
+
   const handleLogout = async () => {
     try {
       const response = await userApi.LogOutUser();
-      console.log("response", response);
-      console.log({ ...response });
+      if ("error" in response) {
+        throw new Error(`Ошибка: ${response.error}`);
+      }
+      console.log("Выход из системы");
+      setUserInfo({ name: "", email: "", role: "", group: "" });
       navigate("/login");
     } catch (error) {
       console.error(error);
     }
-    console.log("Выход из системы");
   };
 
   return (
@@ -52,7 +58,7 @@ export default function Header() {
             <span>groupLog</span>
           </div>
           <div className={styles.desktopMenu}>
-            {navItems.map((item) => (
+            {navBar.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}

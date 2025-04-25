@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { StudentMarkInfoProps } from "@/types/student";
+import { StudentMarkInfoProps } from "@/lib/types/student";
 
 const serverAttendanceURL = "http://localhost:3001/api/attendances";
 

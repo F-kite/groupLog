@@ -10,7 +10,7 @@ import {
   setMonth,
 } from "date-fns";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar1 } from "lucide-react";
 import {
@@ -20,9 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarProps } from "@/types/calendar";
+import { CalendarProps } from "@/lib/types/calendar";
 
-import { MyContext } from "@/hooks/MyContextProvider";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
 
 import styles from "./styles.module.scss";
 

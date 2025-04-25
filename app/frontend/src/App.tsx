@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LoginPage from "./app/login/page.tsx";
-import RegisterPage from "./app/register/page.tsx";
+import LoginPage from "./pages/Login/page.tsx";
+import RegisterPage from "./pages/Registration/page.tsx";
 import HomePage from "./components/HomePage/HomePage.tsx";
 import MainLayout from "./pages/MainLayout/MainLayout.tsx";
 import AttendanceTable from "./pages/AttendancePage/AttendancePage.tsx";
@@ -9,8 +9,11 @@ import ErrorPageNotFound from "./pages/ErrorPages/404Page.tsx";
 import ErrorServerUnavailable from "./pages/ErrorPages/503Page.tsx";
 
 import ProtectedRoute from "../middleware.tsx";
-import { MyContext, MyContextProvider } from "@/hooks/MyContextProvider.tsx";
-import { checkServer } from "@/utils/api/index.ts";
+import {
+  MyContext,
+  MyContextProvider,
+} from "@/lib/hooks/MyContextProvider.tsx";
+import { checkServer } from "@/lib/api/index.ts";
 import "./App.css";
 
 export default function App() {
@@ -20,7 +23,7 @@ export default function App() {
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
-  const { userInfo } = context;
+
 
   useEffect(() => {
     const performCheck = async () => {
@@ -74,22 +77,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {(userInfo.role == "student" || userInfo.role == "teacher") && (
-            <Route
-              path="/attendance"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <AttendanceTable />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-          )}
 
-          {userInfo.role == "administrator" && (
-            <Route
-            path="/adminpanel"
+          <Route
+            path="/attendance"
             element={
               <ProtectedRoute>
                 <MainLayout>
@@ -98,7 +88,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          )}
         </Routes>
       </BrowserRouter>
     </MyContextProvider>

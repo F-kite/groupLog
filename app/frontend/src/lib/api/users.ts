@@ -85,7 +85,25 @@ const LogOutUser = async (): Promise<Response> => {
   }
 };
 
+const getUserInfo = async () => {
+  try {
+    const response = await axios.get(`${serverUsersURL}`);
+    if (response.statusText == "OK" && response.data) {
+      return response.data;
+    }
+    throw new Error("Пустой ответ от сервера");
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || "Ошибка запроса" };
+    } else if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: error || "Неизвестная ошибка" };
+  }
+};
+
 const userApi = {
+  getUserInfo,
   RegistrationUser,
   LoginUser,
   LogOutUser,

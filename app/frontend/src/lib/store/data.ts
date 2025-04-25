@@ -1,5 +1,5 @@
-import { DailyScheduleProps } from "@/types/schedule";
-import { AttendanceStatisticsProps } from "@/types/attendance";
+import { DailyScheduleProps } from "@/lib/types/schedule";
+import { AttendanceStatisticsProps } from "@/lib/types/attendance";
 
 // export const dailySchedule: DailyScheduleProps = {
 //   dayOfWeek: "Monday",

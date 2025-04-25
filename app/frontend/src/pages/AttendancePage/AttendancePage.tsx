@@ -16,13 +16,19 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { MyContext } from "@/hooks/MyContextProvider";
-import { groupLessonsByTime, GroupedLessons } from "@/hooks/groupLessonsByTime";
-import { DailyScheduleProps, DailyScheduleLessonProps } from "@/types/schedule";
-import { StudentsProps } from "@/types/student";
-import { Attendance_logProps } from "@/types/attendance";
-import { StudentMarkInfoProps } from "@/types/student";
-import attendanceApi from "@/utils/api/attendance";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
+import {
+  groupLessonsByTime,
+  GroupedLessons,
+} from "@/lib/hooks/groupLessonsByTime";
+import {
+  DailyScheduleProps,
+  DailyScheduleLessonProps,
+} from "@/lib/types/schedule";
+import { StudentsProps } from "@/lib/types/student";
+import { Attendance_logProps } from "@/lib/types/attendance";
+import { StudentMarkInfoProps } from "@/lib/types/student";
+import attendanceApi from "@/lib/api/attendance";
 import styles from "./styles.module.scss";
 
 type StudentAttendanceProps = Omit<
@@ -121,7 +127,7 @@ export default function AttendanceTable() {
     };
 
     generateStudentAttendance();
-  }, [students, attendanceLog, dailySchedule]);
+  }, [students, attendanceLog, dailySchedule, setStudentAttendance]);
 
   // Переключение режима работы
   const toggleEditMode = () => {
@@ -134,15 +140,15 @@ export default function AttendanceTable() {
     const requestData: StudentMarkInfoProps[] = [];
     const differences = findDifferences(studentAttendance, attendanceLog);
 
-    console.log(differences);
     if (differences.length > 0) {
+      console.info("Запрос на обновление записи");
       const requestResult = await attendanceApi.updateAttendanceRecords(
         differences
       );
       if (requestResult.error) {
         console.error(requestResult.error);
       }
-      alert(requestResult.success);
+      console.info(requestResult.success);
       return;
     }
 
@@ -161,15 +167,15 @@ export default function AttendanceTable() {
       });
     });
 
-    console.log("requestData :", requestData);
-
     if (requestData.length !== 0) {
-      console.log("Запрос отправлен");
+      console.info("Запрос на создание записи");
+      console.log(requestData);
       const requestResult = await attendanceApi.addAttendanceRecords(
         requestData
       );
       if (requestResult.error) {
         console.error(requestResult.error);
+        return;
       }
       console.info(requestResult.success);
     }
@@ -235,29 +241,29 @@ export default function AttendanceTable() {
 
   // Функция для сравнения объектов
   function findDifferences(
-    firstObject: typeof studentAttendance,
-    secondObject: typeof attendanceLog
+    studentAtt: typeof studentAttendance,
+    attendance: typeof attendanceLog
   ) {
     const differences: any = [];
 
     const attendanceLogMap = new Map<number, any>();
-    secondObject.forEach((student) => {
+    attendance.forEach((student) => {
       attendanceLogMap.set(student.student_id, student.attendance_log);
     });
 
-    firstObject.forEach((student) => {
+    studentAtt.forEach((student) => {
       const studentId = student.student_id;
-      const logsFromSecondObject = attendanceLogMap.get(studentId) || [];
+      const logsFromAttendance = attendanceLogMap.get(studentId) || [];
 
       student.studentLog.forEach((log) => {
-        const match = logsFromSecondObject.find(
+        const match = logsFromAttendance.find(
           (el: any) =>
             el.subject_id === log.subject_id &&
             el.lesson_id === log.lesson_id &&
             el.date === log.date
         );
 
-        if (!match || match.status !== log.status) {
+        if (match != undefined && match.status != log.status) {
           differences.push({
             student_id: studentId,
             lesson_schedule_id: log.lesson_id,
