@@ -1,5 +1,4 @@
-import { useContext, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useContext, useEffect, useState } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -7,33 +6,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
-import { DailyScheduleLessonProps, DailyScheduleProps } from "@/types/schedule";
-import { lessonsTimeNumber } from "@/store/data";
-import { MyContext } from "@/hooks/MyContextProvider";
-import scheduleApi from "@/utils/api/schedule";
-import photo from "/image/cardBackground/19.jpg";
+import { lessonsTimeNumber } from "@/lib/store/data";
+import { groupLessonsByTime } from "@/lib/hooks/groupLessonsByTime";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
+import LessonCard from "./LessonCard";
 import styles from "./styles.module.scss";
-
-type Lesson = DailyScheduleProps["lessons"][0];
-type GroupedLessons = { [time: string]: DailyScheduleLessonProps[] };
-
-const groupLessonsByTime = (lessons: Lesson[]): GroupedLessons => {
-  return lessons.reduce((acc: GroupedLessons, lesson) => {
-    const key = `${lesson.timeStart}-${lesson.timeEnd}`;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(lesson);
-    return acc;
-  }, {});
-};
 
 const getPairNumberByTime = (timeStart: string): number | null => {
   const currentPair = lessonsTimeNumber.find(
@@ -44,162 +22,55 @@ const getPairNumberByTime = (timeStart: string): number | null => {
 
 export default function Slider(): JSX.Element {
   const context = useContext(MyContext);
-  const currentDay = (new Date().getDay() + 6) % 7;
+  const [isScheduleLoading, setIsScheduleLoading] = useState(true);
 
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
 
-  const { weekSchedule, setWeekSchedule } = context;
-  const DAYS = weekSchedule.days;
+  const { weekSchedule } = context;
+  const { currentInfo } = context;
 
-  // console.log("dailySchedule:", dailySchedule.lessons);
-  // console.log("DAYS:", DAYS[0]?.lessons);
+  const dayNumber = (new Date(currentInfo.currentDate).getDay() + 6) % 7;
+  const CURRENT_DAY = weekSchedule.days;
 
+  const groupedLessons = groupLessonsByTime(
+    CURRENT_DAY[dayNumber]?.lessons || []
+  );
+
+  // Имитация загрузки данных
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Загружаем расписание
-        const scheduleResponse = await scheduleApi.getWeekSchedule(
-          "ИСт-221",
-          10
-        );
-        if (scheduleResponse.error) {
-          throw new Error(scheduleResponse.error);
-        }
-        setWeekSchedule(scheduleResponse);
-      } catch (error: any) {
-        console.error(error.message);
-      }
-    };
+    const timer = setTimeout(() => {
+      setIsScheduleLoading(false);
+    }, 1000);
 
-    fetchData();
-  }, [setWeekSchedule]);
+    return () => clearTimeout(timer);
+  }, []);
 
-  let groupedLessons: GroupedLessons = {};
+  if (isScheduleLoading && !CURRENT_DAY[dayNumber]?.lessons) {
+    return <p>Загрузка расписания...</p>;
+  }
 
-  if (DAYS && DAYS.length > 0 && DAYS[currentDay].lessons) {
-    groupedLessons = groupLessonsByTime(DAYS[currentDay].lessons);
-  } else if (!DAYS || DAYS.length === 0 || currentDay >= DAYS.length) {
-    console.debug("Нет данных о расписании");
-    return <p>Расписание недоступно</p>;
-  } else {
-    console.error("Нет данных о расписании для текущего дня.");
+  if (!CURRENT_DAY[dayNumber]?.lessons) {
+    return <p>Нет расписания для текущего дня</p>;
+  }
+
+  if (CURRENT_DAY[dayNumber].is_holiday) {
+    return <p>Выходной день</p>;
   }
 
   return (
     <div className={styles.sliderWrapper}>
-      <Carousel
-        opts={{
-          align: "start",
-          containScroll: "trimSnaps",
-          skipSnaps: true,
-        }}
-        className={styles.carousel}
-      >
+      <Carousel className={styles.carousel}>
         <CarouselContent className={styles.carouselContent}>
-          {Object.entries(groupedLessons).map(([time, lessons], index) => {
-            const timeStart = lessons[0].timeStart; // Время начала пары
-            const pairNumber = getPairNumberByTime(timeStart); // Определение номера пары
-            return (
-              <CarouselItem key={index} className={styles.carouselItem}>
-                <Card className={styles.card}>
-                  <CardContent className={styles.cardContent}>
-                    <img
-                      src={photo}
-                      className={styles.bgCardImage}
-                      alt="Background photo"
-                    ></img>
-                    <div className={styles.cardContentContainer}>
-                      {lessons.length === 1 ? (
-                        <>
-                          <div className={styles.subjectAndTeacherWrapper}>
-                            <ul className={styles.subjectAndTeacher}>
-                              <li className={styles.subject}>
-                                {lessons[0].subjectType}.{" "}
-                                {lessons[0].subjectName}
-                              </li>
-                              <li className={styles.teacher}>
-                                {lessons[0].teacherName}
-                              </li>
-                            </ul>
-                            <div className={styles.roomWrapper}>
-                              <div className={styles.room}>
-                                {lessons[0].roomNumber}
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <Accordion
-                          type="single"
-                          collapsible
-                          className={styles.accordion}
-                        >
-                          <AccordionItem
-                            value="item-1"
-                            className={styles.accordionItem}
-                          >
-                            <AccordionTrigger
-                              className={styles.accordionTrigger}
-                            >
-                              {lessons[0].subjectType}. {lessons[0].subjectName}
-                            </AccordionTrigger>
-                            <AccordionContent
-                              className={styles.accordionContent}
-                            >
-                              <ul className={styles.accordionContentList}>
-                                <li className={styles.teacher}>
-                                  {lessons[0].teacherName}
-                                </li>
-                                <li className={styles.room}>
-                                  {lessons[0].roomNumber}
-                                </li>
-                              </ul>
-                            </AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem
-                            value="item-2"
-                            className={styles.accordionItem}
-                          >
-                            <AccordionTrigger
-                              className={styles.accordionTrigger}
-                            >
-                              {lessons[1].subjectType}. {lessons[1].subjectName}
-                            </AccordionTrigger>
-                            <AccordionContent
-                              className={styles.accordionContent}
-                            >
-                              <ul className={styles.accordionContentList}>
-                                <li className={styles.teacher}>
-                                  {lessons[1].teacherName}
-                                </li>
-                                <li className={styles.room}>
-                                  {lessons[1].roomNumber}
-                                </li>
-                              </ul>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-                      )}
-                      <hr className={styles.line}></hr>
-                      <div className={styles.lessonNumberAndTimeWrapper}>
-                        <ul className={styles.lessonNumberAndTime}>
-                          <li className={styles.lessonNumber}>
-                            {pairNumber} пара
-                          </li>
-                          <li className={styles.time}>
-                            {lessons[0].timeStart.slice(0, -3)} -{" "}
-                            {lessons[0].timeEnd.slice(0, -3)}
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-            );
-          })}
+          {Object.entries(groupedLessons).map(([time, lessons], index) => (
+            <CarouselItem key={index} className={styles.carouselItem}>
+              <LessonCard
+                lessons={lessons}
+                pairNumber={getPairNumberByTime(lessons[0].time_start)}
+              />
+            </CarouselItem>
+          ))}
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />

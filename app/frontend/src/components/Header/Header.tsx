@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useContext, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut } from "lucide-react";
 import styles from "./styles.module.scss";
 
-import { useResize } from "@/hooks/useResize";
+import { useResize } from "@/lib/hooks/useResize";
 
-import { UserInfo } from "@/store/data";
+import userApi from "@/lib/api/users";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
 
 const navItems = [
   { name: "Главная", href: "/" },
@@ -14,18 +15,39 @@ const navItems = [
   { name: "Расписание", href: "/schedule" },
 ];
 
+const navItemsForAdmin = [{ name: "Админ-панель", href: "/" }];
+
 export default function Header() {
+  const context = useContext(MyContext);
+
+  if (!context) {
+    throw new Error("MyContext must be used within a MyProvider");
+  }
+  const { userInfo, setUserInfo } = context;
+
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
   const width = useResize();
+  const navigate = useNavigate();
 
-  const username = UserInfo.userName;
-  const useremail = UserInfo.userEmail;
+  const userName = userInfo.name;
+  const userEmail = userInfo.email;
 
-  const handleLogout = () => {
-    // Реализовать логику выхода
-    console.log("Выход из системы");
+  const navBar = userInfo.role == "administrator" ? navItemsForAdmin : navItems;
+
+  const handleLogout = async () => {
+    try {
+      const response = await userApi.LogOutUser();
+      if ("error" in response) {
+        throw new Error(`Ошибка: ${response.error}`);
+      }
+      console.log("Выход из системы");
+      setUserInfo({ name: "", email: "", role: "", group: "" });
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -36,7 +58,7 @@ export default function Header() {
             <span>groupLog</span>
           </div>
           <div className={styles.desktopMenu}>
-            {navItems.map((item) => (
+            {navBar.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
@@ -54,11 +76,11 @@ export default function Header() {
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             >
               <User className="h-5 w-5 mr-2" />
-              <span className={`${styles.userName}`}>{username}</span>
+              <span className={`${styles.userName}`}>{userName}</span>
             </button>
             {isUserMenuOpen && width > 960 && (
               <div className={styles.userDropdown}>
-                <span className={styles.userEmail}>{useremail}</span>
+                <span className={styles.userEmail}>{userEmail}</span>
                 <button className={styles.logoutButton} onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   <span>Выйти</span>
@@ -101,7 +123,7 @@ export default function Header() {
         </div>
         <hr className={styles.dividingLine} />
         <div>
-          <span className={styles.userEmail}>{useremail}</span>
+          <span className={styles.userEmail}>{userEmail}</span>
           <button className={styles.logoutButton} onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             <span>Выйти</span>

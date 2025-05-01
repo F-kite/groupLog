@@ -1,48 +1,40 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LoginPage from "./app/login/page.tsx";
-import RegisterPage from "./app/register/page.tsx";
+import LoginPage from "./pages/Login/page.tsx";
+import RegisterPage from "./pages/Registration/page.tsx";
 import HomePage from "./components/HomePage/HomePage.tsx";
 import MainLayout from "./pages/MainLayout/MainLayout.tsx";
 import AttendanceTable from "./pages/AttendancePage/AttendancePage.tsx";
 import ErrorPageNotFound from "./pages/ErrorPages/404Page.tsx";
 import ErrorServerUnavailable from "./pages/ErrorPages/503Page.tsx";
-import TestingPage from "./pages/TestingPage/TestingPage.tsx";
 
 import ProtectedRoute from "../middleware.tsx";
-import { MyContextProvider } from "./hooks/MyContextProvider.tsx";
-import { checkServer } from "./utils/api/index.ts";
+import {
+  MyContext,
+  MyContextProvider,
+} from "@/lib/hooks/MyContextProvider.tsx";
+import { checkServer } from "@/lib/api/index.ts";
 import "./App.css";
-
-{
-  /*
-  Сделать хеширование паролей при регистрации / авторизации
-   */
-}
-interface InfoProps {
-  group: string;
-  week: number;
-}
-
-const Info: InfoProps = {
-  group: "ИСт-221",
-  week: 10,
-};
 
 export default function App() {
   const [isServerDown, setIsServerDown] = useState<boolean>();
-  const [loading, setLoading] = useState<boolean>(true);
+  const context = useContext(MyContext);
+
+  if (!context) {
+    throw new Error("MyContext must be used within a MyProvider");
+  }
+
 
   useEffect(() => {
     const performCheck = async () => {
       try {
         const result = await checkServer();
-        if (!result.error) {
-          console.log("Сервер доступен");
-          setIsServerDown(false);
-        } else {
+        if (result.error) {
           console.error("Ошибка соединения с сервером:", result.error);
           setIsServerDown(true);
+        } else {
+          console.log("Сервер доступен");
+          setIsServerDown(false);
         }
       } catch (error) {
         console.error("Не удалось выполнить проверку:", error);
@@ -75,7 +67,6 @@ export default function App() {
           <Route path="*" element={<ErrorPageNotFound />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/registration" element={<RegisterPage />} />
-          <Route path="/testing" element={<TestingPage />} />
           <Route
             path="/"
             element={
@@ -86,6 +77,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/attendance"
             element={

@@ -1,6 +1,4 @@
-import { useContext, useState, useEffect } from "react";
-import { MyContext } from "@/hooks/MyContextProvider";
-import studentApi from "@/utils/api/students";
+import { useContext, useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -18,276 +16,390 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+  groupLessonsByTime,
+  GroupedLessons,
+} from "@/lib/hooks/groupLessonsByTime";
+import {
+  DailyScheduleProps,
+  DailyScheduleLessonProps,
+} from "@/lib/types/schedule";
+import { StudentsProps } from "@/lib/types/student";
+import { Attendance_logProps } from "@/lib/types/attendance";
+import { StudentMarkInfoProps } from "@/lib/types/student";
+import attendanceApi from "@/lib/api/attendance";
 import styles from "./styles.module.scss";
+
+type StudentAttendanceProps = Omit<
+  StudentsProps,
+  "email" | "phone" | "enrollment_year"
+> & {
+  studentLog: Attendance_logProps[];
+};
 
 export default function AttendanceTable() {
   const context = useContext(MyContext);
-  
   if (!context) {
     throw new Error("MyContext must be used within a MyProvider");
   }
-  const { students, setStudents } = context;
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Загружаем студентов
-        const studentsResponse = await studentApi.getStudentsByGroup("ИСт-221");
-        if (studentsResponse.error) {
-          throw new Error(studentsResponse.error);
-        }
-        setStudents(studentsResponse);
-      } catch (error: any) {
-        console.error(error.message);
-      }
-    };
-
-    fetchData();
-  }, [setStudents]);
-
-  const lessons = Array.from({ length: 6 }, (_, i) => i + 1); // Номера пар (1-6)
-
-  // Параметры пагинации
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10; // Количество строк на странице
-
-  // Состояния для отслеживания выбранных студентов
-  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
-  const [updatedMarks, setUpdatedMarks] = useState<
-    Record<number, Record<number, string>>
-  >({});
+  const { userInfo, currentInfo, students, weekSchedule, attendanceLog } =
+    context;
 
   // Режим работы: true - изменение одного студента, false - изменение нескольких студентов
   const [isSingleEditMode, setIsSingleEditMode] = useState(false);
 
-  // Вычисление данных для текущей страницы
-  const totalPages = Math.ceil(students.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const paginatedData = students.slice(startIndex, startIndex + rowsPerPage);
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
 
-  // Вычисление количества заполнителей для последней страницы
-  const placeholdersCount =
-    currentPage === totalPages ? rowsPerPage - paginatedData.length : 0;
+  const dailySchedule = getDailyScheduleByDate(currentInfo.currentDate);
+  let groupedLessons: GroupedLessons = {}; // Инициализация по умолчанию
 
-  // Обработчики пагинации
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  if (dailySchedule != null) {
+    groupedLessons = groupLessonsByTime(dailySchedule?.lessons);
+  }
 
-  // Обработчик изменения состояния чекбокса студента
-  const handleStudentCheckboxChange = (studentId: number, checked: boolean) => {
-    if (checked) {
-      setSelectedStudents((prev) => [...prev, studentId]);
-    } else {
-      setSelectedStudents((prev) => prev.filter((id) => id !== studentId));
-    }
-  };
+  const [studentAttendance, setStudentAttendance] = useState<
+    StudentAttendanceProps[]
+  >([]);
 
-  // Функция для обновления отметок у выбранных студентов
-  const updateMarksForSelected = (
-    lesson: number,
-    value: string,
-    studentId?: number
-  ) => {
-    const updatedMarksCopy = { ...updatedMarks };
+  useEffect(() => {
+    const generateStudentAttendance = () => {
+      const attendanceList: StudentAttendanceProps[] = students.map(
+        (student) => {
+          const { student_id, subgroup, name, surname, tgid } = student;
+          const checkAttendanceRecord = attendanceLog.filter(
+            (log) =>
+              log.student_id === student_id && log.attendance_log.length !== 0
+          );
 
-    if (studentId) {
-      // Изменение только одного студента
-      if (!updatedMarksCopy[studentId]) {
-        updatedMarksCopy[studentId] = {};
-      }
-      updatedMarksCopy[studentId][lesson] = value;
-    } else {
-      // Изменение всех выбранных студентов
-      selectedStudents.forEach((studentId) => {
-        if (!updatedMarksCopy[studentId]) {
-          updatedMarksCopy[studentId] = {};
+          let studentLog: Attendance_logProps[] = [];
+
+          if (checkAttendanceRecord.length !== 0) {
+            studentLog = getAttendanceLogByStudentId(student_id);
+          } else if (dailySchedule != null) {
+            const logInfoArr: Attendance_logProps[] = [];
+            for (const [key, value] of Object.entries(groupedLessons)) {
+              let subject: DailyScheduleLessonProps | null = null;
+              switch (value.length) {
+                case 1:
+                  const les = value[0];
+                  if (!les.subject_name.includes(`п/г`)) subject = les;
+                  else if (les.subject_name.includes(`${subgroup} п/г`))
+                    subject = les;
+                  break;
+                case 2:
+                  const les1 = value[0];
+                  const les2 = value[1];
+                  subject = subgroup === 1 ? les1 : les2;
+                  break;
+              }
+
+              if (subject == null) {
+                continue;
+              }
+
+              const logInfo: Attendance_logProps = {
+                date: currentInfo.currentDate,
+                status: "",
+                subject_id: subject.subject_id,
+                day_id: dailySchedule.day_id,
+                lesson_id: subject?.lesson_id,
+              };
+
+              logInfoArr.push(logInfo);
+            }
+
+            studentLog = logInfoArr;
+          }
+
+          return {
+            student_id,
+            subgroup,
+            name,
+            surname,
+            tgid,
+            studentLog,
+          };
         }
-        updatedMarksCopy[studentId][lesson] = value;
-      });
-    }
+      );
 
-    setUpdatedMarks(updatedMarksCopy);
+      setStudentAttendance(attendanceList);
+    };
 
-    console.log(
-      `Updated marks for lesson: ${lesson}, value: ${value}, studentId: ${
-        studentId || "all"
-      }`
-    );
-  };
+    generateStudentAttendance();
+  }, [students, attendanceLog, dailySchedule, setStudentAttendance]);
 
   // Переключение режима работы
   const toggleEditMode = () => {
     setIsSingleEditMode((prev) => !prev);
-    setSelectedStudents([]); // Очищаем выбранных студентов при переключении режима
+    setSelectedStudents([]); // Очищаем выбранных студентов
   };
 
-  // Сохранение изменений
-  const saveСhanges = () => {};
+  //Сохранение изменений
+  const saveHandler = async () => {
+    const requestData: StudentMarkInfoProps[] = [];
+    const differences = findDifferences(studentAttendance, attendanceLog);
+
+    if (differences.length > 0) {
+      console.info("Запрос на обновление записи");
+      const requestResult = await attendanceApi.updateAttendanceRecords(
+        differences
+      );
+      if (requestResult.error) {
+        console.error(requestResult.error);
+      }
+      console.info(requestResult.success);
+      return;
+    }
+
+    studentAttendance.map((student) => {
+      student.studentLog.map((log) => {
+        if (log.status !== "" && dailySchedule != null) {
+          const record = {
+            student_id: student.student_id,
+            lesson_schedule_id: log.lesson_id,
+            status: log.status,
+            day_schedule_id: dailySchedule.day_id,
+          };
+
+          requestData.push(record);
+        }
+      });
+    });
+
+    if (requestData.length !== 0) {
+      console.info("Запрос на создание записи");
+      console.log(requestData);
+      const requestResult = await attendanceApi.addAttendanceRecords(
+        requestData
+      );
+      if (requestResult.error) {
+        console.error(requestResult.error);
+        return;
+      }
+      console.info(requestResult.success);
+    }
+  };
+
+  // Обновление статуса посещаемости
+  const updateAttendanceStatus = (
+    studentId: number,
+    lessonId: number,
+    newStatus: string
+  ) => {
+    console.log(studentId, lessonId, newStatus);
+    setStudentAttendance((prevAttendance) =>
+      prevAttendance.map((student) =>
+        student.student_id === studentId
+          ? ({
+              ...student,
+              studentLog: student.studentLog.map((log) =>
+                log.lesson_id === lessonId ? { ...log, status: newStatus } : log
+              ),
+            } as StudentAttendanceProps)
+          : student
+      )
+    );
+    console.log(studentAttendance);
+  };
+
+  //выбор отмеченных студентов
+  const handleStudentCheckboxChange = (studentId: number, checked: boolean) => {
+    setSelectedStudents((prev) =>
+      checked ? [...prev, studentId] : prev.filter((id) => id !== studentId)
+    );
+  };
+
+  const updateMarksForSelected = (lessonId: number, newStatus: string) => {
+    setStudentAttendance((prevAttendance) =>
+      prevAttendance.map((student) =>
+        selectedStudents.includes(student.student_id)
+          ? ({
+              ...student,
+              studentLog: student.studentLog.map((log) =>
+                log.lesson_id === lessonId ? { ...log, status: newStatus } : log
+              ),
+            } as StudentAttendanceProps)
+          : student
+      )
+    );
+  };
+
+  function getAttendanceLogByStudentId(
+    studentId: number
+  ): Attendance_logProps[] {
+    const studentData = attendanceLog.find(
+      (log) => log.student_id === studentId
+    );
+    return studentData?.attendance_log || [];
+  }
+
+  function getDailyScheduleByDate(date: string): DailyScheduleProps | null {
+    const data = weekSchedule.days.find((schedule) => schedule.date === date);
+    return data || null;
+  }
+
+  // Функция для сравнения объектов
+  function findDifferences(
+    studentAtt: typeof studentAttendance,
+    attendance: typeof attendanceLog
+  ) {
+    const differences: any = [];
+
+    const attendanceLogMap = new Map<number, any>();
+    attendance.forEach((student) => {
+      attendanceLogMap.set(student.student_id, student.attendance_log);
+    });
+
+    studentAtt.forEach((student) => {
+      const studentId = student.student_id;
+      const logsFromAttendance = attendanceLogMap.get(studentId) || [];
+
+      student.studentLog.forEach((log) => {
+        const match = logsFromAttendance.find(
+          (el: any) =>
+            el.subject_id === log.subject_id &&
+            el.lesson_id === log.lesson_id &&
+            el.date === log.date
+        );
+
+        if (match != undefined && match.status != log.status) {
+          differences.push({
+            student_id: studentId,
+            lesson_schedule_id: log.lesson_id,
+            status: log.status,
+            day_schedule_id: log.day_id,
+          });
+        }
+      });
+    });
+
+    return differences;
+  }
 
   return (
     <div className={styles.container}>
-      {/* Кнопка переключения режима */}
+      {/* Заголовок */}
       <div className={styles.title}>
         <div className={styles.info}>
-          <p>Посещаемость группы ИСт-221</p>
+          <p>Посещаемость группы {userInfo.group}</p>
           <p className={styles.numStudents}>{students.length} студента</p>
+          <p className={styles.numStudents}>{currentInfo.currentDate}</p>
         </div>
         <div className={styles.buttons}>
-          <div className={styles.buttonEditMode}>
-            <Button onClick={toggleEditMode} variant="auth">
-              {isSingleEditMode
-                ? "Одиночное редактирование"
-                : "Массовое редактирование"}
-            </Button>
-          </div>
-          <div className={styles.buttonSave}>
-            <Button onClick={saveСhanges} variant="auth">
-              Сохранить изменения
-            </Button>
-          </div>
+          <Button onClick={toggleEditMode} variant="auth">
+            {isSingleEditMode
+              ? "Одиночное редактирование"
+              : "Массовое редактирование"}
+          </Button>
+          <Button onClick={saveHandler} variant="auth">
+            Сохранить изменения
+          </Button>
         </div>
       </div>
 
-      <Table>
+      {/* Таблица посещаемости */}
+      <Table className={styles.table}>
         <TableHeader>
-          <TableRow>
-            <TableHead className={styles.studentCellHead}>
+          <TableRow className={styles.tableRow}>
+            <TableHead
+              className={`${styles.studentCellHead} ${styles.studentCell}`}
+            >
               {!isSingleEditMode && (
                 <Checkbox
                   className={styles.studentCheckbox}
-                  checked={selectedStudents.length === students.length}
                   onCheckedChange={(checked) =>
-                    setSelectedStudents(
-                      checked ? students.map((s) => s.student_id) : []
-                    )
+                    studentAttendance.map((student) => {
+                      handleStudentCheckboxChange(
+                        student.student_id,
+                        !!checked
+                      );
+                    })
                   }
                 />
               )}
               Студенты
             </TableHead>
-
-            {lessons.map((lesson) => (
-              <TableHead key={lesson}>{lesson}-я пара</TableHead>
-            ))}
+            {groupedLessons &&
+              Object.keys(groupedLessons).map((key) => (
+                <TableHead key={key} className={styles.lessonCell}>
+                  {key}-я пара
+                </TableHead>
+              ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedData.map((student) => {
-            const isChecked = selectedStudents.includes(student.student_id);
-
+          {studentAttendance.map((att) => {
             return (
-              <TableRow key={student.student_id} className={styles.tableRow}>
-                {!isSingleEditMode && (
-                  <TableCell className={styles.studentCell}>
+              <TableRow key={att.student_id} className={styles.tableRow}>
+                <TableCell className={styles.studentCell}>
+                  {!isSingleEditMode && (
                     <Checkbox
                       className={styles.studentCheckbox}
-                      checked={isChecked}
+                      checked={selectedStudents.includes(att.student_id)}
                       onCheckedChange={(checked) =>
-                        handleStudentCheckboxChange(
-                          student.student_id,
-                          !!checked
-                        )
+                        handleStudentCheckboxChange(att.student_id, !!checked)
                       }
                     />
-                    {student.student_surname} {student.student_name}
-                  </TableCell>
-                )}
-                {isSingleEditMode && (
-                  <TableCell className={styles.studentCell}>
-                    {student.student_surname} {student.student_name}
-                  </TableCell>
-                )}
-                {lessons.map((lesson) => {
-                  const mark =
-                    updatedMarks[student.student_id]?.[lesson] ||
-                    student.marks?.[lesson] ||
-                    " ";
+                  )}
+                  {`${att.surname} ${att.name}`}
+                </TableCell>
+                {groupedLessons &&
+                  Object.keys(groupedLessons).map((key) => {
+                    const lessons = groupedLessons[key];
+                    const relevantLesson = lessons.find(
+                      (lesson) =>
+                        !lesson.subject_name.includes("п/г") ||
+                        lesson.subject_name.includes(`${att.subgroup} п/г`)
+                    );
 
-                  return (
-                    <TableCell key={lesson}>
-                      <Select
-                        value={mark}
-                        onValueChange={(value) => {
-                          if (isSingleEditMode) {
-                            updateMarksForSelected(
-                              lesson,
-                              value,
-                              student.student_id
-                            );
-                          } else if (selectedStudents.length > 0) {
-                            updateMarksForSelected(lesson, value);
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-[90px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Б">Б</SelectItem>
-                          <SelectItem value="УП">УП</SelectItem>
-                          <SelectItem value="Н">Н</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  );
-                })}
+                    const log = att.studentLog.find(
+                      (log) => log.lesson_id === relevantLesson?.lesson_id
+                    );
+
+                    return (
+                      <TableCell key={key} className={styles.lessonCell}>
+                        {relevantLesson ? (
+                          <Select
+                            value={log?.status || ""}
+                            onValueChange={(value) => {
+                              if (isSingleEditMode) {
+                                updateAttendanceStatus(
+                                  att.student_id,
+                                  relevantLesson.lesson_id,
+                                  value
+                                );
+                              } else if (selectedStudents.length > 0) {
+                                updateMarksForSelected(
+                                  relevantLesson.lesson_id,
+                                  value
+                                );
+                              }
+                            }}
+                          >
+                            <SelectTrigger className={styles.selectTrigger}>
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="П">Присутствует</SelectItem>
+                              <SelectItem value="Б">Болеет</SelectItem>
+                              <SelectItem value="УП">
+                                Уважительная причина
+                              </SelectItem>
+                              <SelectItem value="Н">Отсутствует</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className={styles.noLesson}>нет пары</span>
+                        )}
+                      </TableCell>
+                    );
+                  })}
               </TableRow>
             );
           })}
-          {/* Заполнители для последней страницы */}
-          {Array.from({ length: placeholdersCount }).map((_, index) => (
-            <TableRow
-              key={`placeholder-${index}`}
-              className={styles.placeholderRow}
-            >
-              <TableCell colSpan={lessons.length + 1}>&nbsp;</TableCell>
-            </TableRow>
-          ))}
         </TableBody>
       </Table>
-
-      {/* Пагинация */}
-      {students.length != 0 && (
-        <div className="flex justify-center mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(currentPage - 1)}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      isActive={currentPage === page}
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(currentPage + 1)}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
     </div>
   );
 }

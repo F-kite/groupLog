@@ -12,17 +12,17 @@ async function getOrCreateData(
 ) {
   // Добавить или получить предмет
   let { data: subjectData } = await supabase
-    .from("subjects")
+    .from("subject")
     .select("subject_id")
-    .eq("subject_name", subjectName)
-    .eq("subject_type", subjectType)
+    .eq("name", subjectName)
+    .eq("type", subjectType)
     .single();
   if (!subjectData) {
     const { data } = await supabase
-      .from("subjects")
+      .from("subject")
       .insert({
-        subject_name: subjectName,
-        subject_type: subjectType,
+        name: subjectName,
+        type: subjectType,
       })
       .select("subject_id")
       .single();
@@ -32,14 +32,14 @@ async function getOrCreateData(
 
   // Добавить или получить преподавателя
   let { data: teacherData } = await supabase
-    .from("teachers")
+    .from("teacher")
     .select("teacher_id")
-    .eq("teacher_name", teacherName)
+    .eq("name", teacherName)
     .single();
   if (!teacherData) {
     const { data } = await supabase
-      .from("teachers")
-      .insert({ teacher_name: teacherName })
+      .from("teacher")
+      .insert({ name: teacherName })
       .select("teacher_id")
       .single();
     teacherData = data;
@@ -48,14 +48,14 @@ async function getOrCreateData(
 
   // Добавить или получить аудиторию
   let { data: roomData } = await supabase
-    .from("rooms")
+    .from("room")
     .select("room_id")
-    .eq("room_number", roomNumber)
+    .eq("number", roomNumber)
     .single();
   if (!roomData) {
     const { data } = await supabase
-      .from("rooms")
-      .insert({ room_number: roomNumber })
+      .from("room")
+      .insert({ number: roomNumber })
       .select("room_id")
       .single();
     roomData = data;
@@ -64,7 +64,7 @@ async function getOrCreateData(
 
   // Добавить урок в расписание
   const { data: lessonData, error: lessonError } = await supabase
-    .from("lessons_schedule")
+    .from("lesson_schedule")
     .insert({
       subject_id: subjectId,
       room_id: roomId,
@@ -78,7 +78,7 @@ async function getOrCreateData(
   const lessonId = lessonData.lesson_schedule_id;
 
   // Связать урок с днем
-  await supabase.from("lessons_days_schedule").insert({
+  await supabase.from("lesson_day_schedule").insert({
     day_id: dayId,
     lesson_id: lessonId,
   });
@@ -97,15 +97,15 @@ async function processSchedule(schedule) {
 
     // Получить или создать группу
     const { data: groupData, error: groupError } = await supabase
-      .from("groups")
+      .from("group")
       .select("group_id")
-      .eq("group_name", group)
+      .eq("name", group)
       .single();
 
     if (!groupData) {
       const { data, error } = await supabase
-        .from("groups")
-        .insert({ group_name: group })
+        .from("group")
+        .insert({ name: group })
         .select("group_id")
         .single();
       if (error) throw error;
@@ -119,9 +119,9 @@ async function processSchedule(schedule) {
     endDate = formatDate(endDate);
 
     let { data } = await supabase
-      .from("weeks_schedule")
+      .from("week_schedule")
       .select("week_schedule_id")
-      .eq("week_schedule_number", week)
+      .eq("week_number", week)
       .eq("group_id", groupId)
       .single();
 
@@ -130,9 +130,9 @@ async function processSchedule(schedule) {
     }
 
     const { data: weekData, error: weekError } = await supabase
-      .from("weeks_schedule")
+      .from("week_schedule")
       .insert({
-        week_schedule_number: week,
+        week_number: week,
         group_id: groupId,
         start_date: startDate,
         end_date: endDate,
@@ -149,7 +149,7 @@ async function processSchedule(schedule) {
 
       // Добавить день в таблицу days_schedule
       const { data: dayData, error: dayError } = await supabase
-        .from("days_schedule")
+        .from("day_schedule")
         .insert({
           day_of_week: day.day,
           date: formatDate(day.date),
@@ -161,7 +161,7 @@ async function processSchedule(schedule) {
       const dayId = dayData.day_schedule_id;
 
       // Связать день с неделей
-      await supabase.from("days_weeks_schedule").insert({
+      await supabase.from("day_week_schedule").insert({
         week_id: weekId,
         day_id: dayId,
       });
@@ -230,16 +230,16 @@ const createSchedule = async (req, res) => {
 
   try {
     const { data: groupData } = await supabase
-      .from("groups")
+      .from("group")
       .select("group_id")
-      .eq("group_name", group)
+      .eq("name", group)
       .single();
     if (groupData) {
       const groupId = groupData.group_id;
       const { data: weekData } = await supabase
-        .from("weeks_schedule")
+        .from("week_schedule")
         .select("week_schedule_id")
-        .eq("week_schedule_number", week)
+        .eq("week_number", week)
         .eq("group_id", groupId)
         .single();
       if (weekData) {
@@ -268,29 +268,30 @@ const getWeeklySchedule = async (req, res) => {
   try {
     const { group, week } = req.params;
     const { data: gData, error: gError } = await supabase
-      .from("groups")
+      .from("group")
       .select("group_id")
-      .eq("group_name", group)
+      .eq("name", group)
       .single();
 
-    if (gError) {
-      throw new Error(gError.message);
+    if (gError || !gData) {
+      console.error("Group not found:", gError?.message || "Unknown error");
+      return res.status(404).json({ error: "Group not found" });
     }
-    if (!gData) throw new Error("Указанная группа не найдена");
+
     const groupId = gData.group_id;
     // Получить данные о неделе
     const { data: weekData, error: weekError } = await supabase
-      .from("weeks_schedule")
+      .from("week_schedule")
       .select(
         `
         week_schedule_id,
-        week_schedule_number,
+        week_number,
         start_date,
         end_date,
-        groups (group_id, group_name)
+        group (group_id, name)
       `
       )
-      .eq("week_schedule_number", week)
+      .eq("week_number", week)
       .eq("group_id", groupId)
       .single();
 
@@ -298,26 +299,26 @@ const getWeeklySchedule = async (req, res) => {
       return res.status(404).json({ error: "Week does not exists" });
     if (weekError) throw new Error(weekError.message);
     const weekId = weekData.week_schedule_id;
-    const { groups: groupData, start_date, end_date } = weekData;
+    const { group: groupData, start_date, end_date } = weekData;
 
     // Получить дни недели
     const { data: daysData, error: daysError } = await supabase
-      .from("days_weeks_schedule")
+      .from("day_week_schedule")
       .select(
         `
-        days_schedule (
+        day_schedule (
           day_schedule_id,
           day_of_week,
           date,
           is_holiday,
-          lessons_days_schedule (
-            lessons_schedule (
+          lesson_day_schedule (
+            lesson_schedule (
               lesson_schedule_id,
               time_start,
               time_end,
-              subjects (subject_name, subject_type),
-              teachers (teacher_name),
-              rooms (room_number)
+              subject (subject_id, name, type),
+              teacher (name),
+              room (number)
             )
           )
         )
@@ -332,26 +333,27 @@ const getWeeklySchedule = async (req, res) => {
 
     // Преобразование данных
     const schedule = {
-      weekId: weekData.week_schedule_id,
-      weekNumber: weekData.week_schedule_number,
-      groupName: groupData.group_name,
-      startDate: start_date,
-      endDate: end_date,
+      week_id: weekData.week_schedule_id,
+      week_number: weekData.week_number,
+      group_name: groupData.name,
+      start_date: start_date,
+      end_date: end_date,
       days: daysData.map((day) => ({
-        dayId: day.days_schedule.day_schedule_id,
-        dayOfWeek: day.days_schedule.day_of_week,
-        date: day.days_schedule.date,
-        isHoliday: day.days_schedule.is_holiday,
-        lessons: day.days_schedule.lessons_days_schedule.map((lessonEntry) => {
-          const lesson = lessonEntry.lessons_schedule;
+        day_id: day.day_schedule.day_schedule_id,
+        day_of_week: day.day_schedule.day_of_week,
+        date: day.day_schedule.date,
+        is_holiday: day.day_schedule.is_holiday,
+        lessons: day.day_schedule.lesson_day_schedule.map((lessonEntry) => {
+          const lesson = lessonEntry.lesson_schedule;
           return {
-            lessonId: lesson.lesson_schedule_id,
-            timeStart: lesson.time_start,
-            timeEnd: lesson.time_end,
-            subjectName: lesson.subjects.subject_name,
-            subjectType: lesson.subjects.subject_type,
-            teacherName: lesson.teachers.teacher_name,
-            roomNumber: lesson.rooms.room_number,
+            lesson_id: lesson.lesson_schedule_id,
+            time_start: lesson.time_start,
+            time_end: lesson.time_end,
+            subject_id: lesson.subject.subject_id,
+            subject_name: lesson.subject.name,
+            subject_type: lesson.subject.type,
+            teacher_name: lesson.teacher.name,
+            room_number: lesson.room.number,
           };
         }),
       })),
@@ -383,9 +385,9 @@ const getDailySchedule = async (req, res) => {
 
     // Получение ID группы
     const { data: gData, error: gError } = await supabase
-      .from("groups")
+      .from("group")
       .select("group_id")
-      .eq("group_name", group)
+      .eq("name", group)
       .single();
 
     if (gError) {
@@ -396,9 +398,9 @@ const getDailySchedule = async (req, res) => {
 
     // Получение данных о неделе
     const { data: weekData, error: weekError } = await supabase
-      .from("weeks_schedule")
+      .from("week_schedule")
       .select("week_schedule_id")
-      .eq("week_schedule_number", week)
+      .eq("week_number", week)
       .eq("group_id", groupId)
       .single();
 
@@ -409,54 +411,54 @@ const getDailySchedule = async (req, res) => {
 
     // Получение данных о расписании на указанный день
     const { data: dayData, error: dayError } = await supabase
-      .from("days_weeks_schedule")
+      .from("day_week_schedule")
       .select(
         `
-        days_schedule (
+        day_schedule (
           day_schedule_id,
           day_of_week,
           date,
           is_holiday,
-          lessons_days_schedule (
-            lessons_schedule (
+          lesson_day_schedule (
+            lesson_schedule (
               lesson_schedule_id,
               time_start,
               time_end,
-              subjects (subject_name, subject_type),
-              teachers (teacher_name),
-              rooms (room_number)
+              subject (name, type),
+              teacher (name),
+              room (number)
             )
           )
         )
       `
       )
       .eq("week_id", weekId)
-      .filter("days_schedule.day_of_week", "eq", dayName);
+      .filter("day_schedule.day_of_week", "eq", dayName);
 
     const dailySchedule = dayData[day - 1];
     if (dayError)
       throw new Error("Ошибка получения данных о дне: " + dayError.message);
-    if (!dailySchedule || dailySchedule.days_schedule == null)
+    if (!dailySchedule || dailySchedule.day_schedule == null)
       throw new Error("No schedule found for the specified day");
 
     // Преобразование данных
-    const { days_schedule: daySchedule } = dailySchedule;
+    const { day_schedule: daySchedule } = dailySchedule;
 
     const schedule = {
-      dayId: daySchedule.day_schedule_id,
-      dayOfWeek: daySchedule.day_of_week,
+      day_id: daySchedule.day_schedule_id,
+      day_of_Week: daySchedule.day_of_week,
       date: daySchedule.date,
-      isHoliday: daySchedule.is_holiday,
-      lessons: daySchedule.lessons_days_schedule.map((lessonEntry) => {
-        const lesson = lessonEntry.lessons_schedule;
+      is_holiday: daySchedule.is_holiday,
+      lessons: daySchedule.lesson_day_schedule.map((lessonEntry) => {
+        const lesson = lessonEntry.lesson_schedule;
         return {
-          lessonId: lesson.lesson_schedule_id,
-          timeStart: lesson.time_start,
-          timeEnd: lesson.time_end,
-          subjectName: lesson.subjects.subject_name,
-          subjectType: lesson.subjects.subject_type,
-          teacherName: lesson.teachers.teacher_name,
-          roomNumber: lesson.rooms.room_number,
+          lesson_id: lesson.lesson_schedule_id,
+          time_start: lesson.time_start,
+          time_end: lesson.time_end,
+          subject_name: lesson.subject.name,
+          subject_type: lesson.subject.type,
+          teacher_name: lesson.teacher.name,
+          room_number: lesson.room.number,
         };
       }),
     };

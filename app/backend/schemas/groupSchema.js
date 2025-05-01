@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 export const groupSchemaToCreate = Joi.object({
-  group_name: Joi.string()
+  name: Joi.string()
     .pattern(/^[А-Яа-я]{3,7}-\d{3}$/)
     .required(),
 
@@ -9,7 +9,7 @@ export const groupSchemaToCreate = Joi.object({
 });
 
 export const groupSchemaToUpdate = Joi.object({
-  group_name: Joi.string()
+  name: Joi.string()
     .pattern(/^[А-Яа-я]{3,7}-\d{3}$/)
     .optional(),
 

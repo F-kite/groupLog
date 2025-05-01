@@ -1,15 +1,15 @@
 import { useState } from "react";
 import * as z from "zod";
 import { EyeOpenIcon, EyeClosedIcon } from "@radix-ui/react-icons";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RegisterSchema } from "../../../schemas/index";
+import { RegisterSchema } from "../../lib/schemas/index";
 import FormError from "./FormError";
 import FormSuccess from "./FormSuccess";
-import userApi from "../../utils/api/users";
+import userApi from "../../lib/api/users";
 
 import styles from "./styles.module.scss";
 

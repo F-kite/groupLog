@@ -7,7 +7,7 @@ export const studentSchemaToCreate = Joi.object({
   subgroup: Joi.number().integer().optional().valid(1, 2).messages({
     "string.valid": "Значение подгруппы может быть в диапозоне 1-2",
   }),
-  student_name: Joi.string()
+  name: Joi.string()
     .min(2)
     .max(30)
     .required()
@@ -18,7 +18,7 @@ export const studentSchemaToCreate = Joi.object({
       "string.max": "Имя не может превышать 30 символов",
       "string.pattern.base": "Имя может содержать только буквы",
     }),
-  student_surname: Joi.string()
+  surname: Joi.string()
     .min(2)
     .max(30)
     .required()
@@ -29,21 +29,21 @@ export const studentSchemaToCreate = Joi.object({
       "string.max": "Фамилия не может превышать 30 символов",
       "string.pattern.base": "Фамилия может содержать только буквы",
     }),
-  student_patronymic: Joi.string()
+  patronymic: Joi.string()
     .optional()
     .allow("")
     .pattern(/^[А-Яа-яёЁ]*$/)
     .messages({
       "string.pattern.base": "Отчество может содержать только буквы",
     }),
-  student_phone: Joi.string()
+  phone: Joi.string()
     .optional()
     .pattern(/^\+?[0-9]{11,15}$/)
     .messages({
       "string.pattern.base":
         "Номер телефона должен быть в формате +71234567890 или 71234567890",
     }),
-  student_email: Joi.string()
+  email: Joi.string()
     .optional()
     .email({
       minDomainSegments: 2,
@@ -52,7 +52,7 @@ export const studentSchemaToCreate = Joi.object({
     .messages({
       "string.email": "Некорректный формат email",
     }),
-  student_tgid: Joi.string()
+  tgid: Joi.string()
     .optional()
     .pattern(/^\@[A-Za-z0-9_]+$/)
     .messages({
@@ -78,7 +78,7 @@ export const studentSchemaToUpdate = Joi.object({
   subgroup: Joi.number().integer().optional().valid(1, 2).messages({
     "string.valid": "Значение подгруппы может быть в диапозоне 1-2",
   }),
-  student_name: Joi.string()
+  name: Joi.string()
     .min(2)
     .max(30)
     .optional()
@@ -89,7 +89,7 @@ export const studentSchemaToUpdate = Joi.object({
       "string.max": "Имя не может превышать 30 символов",
       "string.pattern.base": "Имя может содержать только буквы",
     }),
-  student_surname: Joi.string()
+  surname: Joi.string()
     .min(2)
     .max(30)
     .optional()
@@ -100,21 +100,21 @@ export const studentSchemaToUpdate = Joi.object({
       "string.max": "Фамилия не может превышать 30 символов",
       "string.pattern.base": "Фамилия может содержать только буквы",
     }),
-  student_patronymic: Joi.string()
+  patronymic: Joi.string()
     .optional()
     .allow("")
     .pattern(/^[А-Яа-яёЁ]*$/)
     .messages({
       "string.pattern.base": "Отчество может содержать только буквы",
     }),
-  student_phone: Joi.string()
+  phone: Joi.string()
     .optional()
     .pattern(/^\+?[0-9]{11,15}$/)
     .messages({
       "string.pattern.base":
         "Номер телефона должен быть в формате +71234567890 или 71234567890",
     }),
-  student_email: Joi.string()
+  email: Joi.string()
     .optional()
     .email({
       minDomainSegments: 2,
@@ -123,7 +123,7 @@ export const studentSchemaToUpdate = Joi.object({
     .messages({
       "string.email": "Некорректный формат email",
     }),
-  student_tgid: Joi.string()
+  tgid: Joi.string()
     .optional()
     .pattern(/^\@[A-Za-z0-9_]+$/)
     .messages({

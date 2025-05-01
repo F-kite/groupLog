@@ -22,18 +22,46 @@
   }
 }
 
+.table {
+  width: 100%;
+}
+
+.studentCell,
+.studentCellHead {
+  width: 13rem;
+  text-align: center;
+  padding: 8px;
+  overflow: hidden;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.lessonCell {
+  align-items: center;
+  justify-content: center;
+  width: 170px;
+  text-align: center;
+  padding: 8px;
+}
+
 .studentCheckbox {
   margin-right: 0.5rem;
 }
 
-.studentCell {
-  height: 3.25rem;
-  display: flex; /* Используем flexbox для удобного выравнивания */
-  align-items: center; /* Вертикальное выравнивание по центру */
-  text-align: center; /* Выравнивание текста по центру */
-  vertical-align: middle; /* Для совместимости с таблицами */
+.selectTrigger {
+  width: 110px;
+  margin: 0 auto;
 }
 
 .placeholderRow {
   height: 3.25rem; /* Фиксированная высота */
+}
+
+.noLesson {
+  color: #d4d4d4; /* Серый цвет */
+  font-style: italic;
 }

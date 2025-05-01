@@ -10,37 +10,37 @@ async function GetAllData() {
 
     // студенты
     const { data: students, error: studentsError } = await supabase
-      .from("students")
+      .from("student")
       .select("*");
 
     // группы
     const { data: groups, error: groupsError } = await supabase
-      .from("groups")
+      .from("group")
       .select("*");
 
     // преподаватели
     const { data: teachers, error: teachersError } = await supabase
-      .from("teachers")
+      .from("teacher")
       .select("*");
 
     // расписание на день
     const { data: dailyschedule, error: dailyscheduleError } = await supabase
-      .from("days_schedule")
+      .from("day_schedule")
       .select("*");
 
     // расписание на неделю
     const { data: weeklyschedule, error: weeklyscheduleError } = await supabase
-      .from("weeks_schedule")
+      .from("week_schedule")
       .select("*");
 
     // предметы
     const { data: subjects, error: subjectsError } = await supabase
-      .from("subjects")
+      .from("subject")
       .select("*");
 
     // расписание одной пары
     const { data: lessons, error: lessonsError } = await supabase
-      .from("lesssons_schedule")
+      .from("lessson_schedule")
       .select("*");
 
     usersError

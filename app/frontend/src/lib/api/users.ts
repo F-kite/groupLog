@@ -1,0 +1,112 @@
+import axios from "axios";
+
+type RegistrationUserProps = {
+  name: string;
+  email: string;
+  password: string;
+};
+type LoginUserProps = {
+  name?: string;
+  email?: string;
+  password: string;
+};
+
+type Response = { success: string } | { error: string };
+
+const serverUsersURL = "http://localhost:3001/api/users";
+
+const RegistrationUser = async (
+  data: RegistrationUserProps
+): Promise<Response> => {
+  const sentData = JSON.stringify(data);
+  try {
+    const response = await axios.post(
+      `${serverUsersURL}/registration`,
+      sentData,
+      {
+        headers: {
+          "Content-Type": "application/json", // формат передаваемых данных
+        },
+      }
+    );
+    if (response.data) {
+      return { success: response.data.message };
+    }
+    return { error: "Неизвестная ошибка: пустой ответ от сервера" };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || "Ошибка запроса" };
+    } else if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: "Неизвестная ошибка" };
+  }
+};
+
+const LoginUser = async (data: LoginUserProps): Promise<Response> => {
+  const sentData = JSON.stringify(data);
+  try {
+    const response = await axios.post(`${serverUsersURL}/login`, sentData, {
+      headers: {
+        "Content-Type": "application/json", // формат передаваемых данных
+      },
+    });
+    if (response.data) {
+      return { success: response.data.message };
+    }
+    return { error: "Неизвестная ошибка: пустой ответ от сервера" };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || "Ошибка запроса" };
+    } else if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: "Неизвестная ошибка" };
+  }
+};
+
+const LogOutUser = async (): Promise<Response> => {
+  try {
+    const response = await axios.post(`${serverUsersURL}/logout`, {
+      credentials: "include",
+    });
+    if (response.statusText == "OK") {
+      return { success: "Успешно" }; // Успешный выход
+    } else {
+      throw new Error("Ошибка при выходе из системы");
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || "Ошибка запроса" };
+    } else if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: "Неизвестная ошибка" };
+  }
+};
+
+const getUserInfo = async () => {
+  try {
+    const response = await axios.get(`${serverUsersURL}`);
+    if (response.statusText == "OK" && response.data) {
+      return response.data;
+    }
+    throw new Error("Пустой ответ от сервера");
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: error.response?.data?.error || "Ошибка запроса" };
+    } else if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: error || "Неизвестная ошибка" };
+  }
+};
+
+const userApi = {
+  getUserInfo,
+  RegistrationUser,
+  LoginUser,
+  LogOutUser,
+};
+
+export default userApi;

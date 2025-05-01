@@ -41,8 +41,8 @@ import {
 } from "./schemas/subjectSchema.js";
 
 import {
-  attendanceSchemaToCreate,
-  attendanceSchemaToUpdate,
+  attendanceArraySchemaToCreate,
+  attendanceArraySchemaToUpdate,
 } from "./schemas/attendanceSchema.js";
 
 const app = express();
@@ -77,9 +77,7 @@ app.get("/ping", (req, res) => {
 });
 
 app.get("/dashboard", authMiddleware, (req, res) => {
-  res.json({
-    message: "Добро пожаловать на защищенную страницу",
-  });
+  res.json(req.user);
 });
 
 app.post("/api/refresh-token", dbApi.refreshAuthToken);
@@ -89,29 +87,35 @@ post - создание со статусом 201 после успешного 
 put - обновление записи
 */
 
+//Админка
+app.get("/api/admin/users/:email", userApi.getUserInfo);
+app.get("/api/admin/users", userApi.getAllUsers);
+app.put("/api/admin/users", userApi.updateRoleAndGroup);
+app.delete("/api/admin/users/:id", userApi.remove);
+
+//Расписание
 app.get("/api/schedule/:group/:week", scheduleApi.getWeeklySchedule);
 app.get("/api/schedule/:group/:week/:day", scheduleApi.getDailySchedule);
 app.post("/api/schedule/:group/:week", scheduleApi.createSchedule);
 
-app.get("api/admin/users", userApi.getByEmail);
-app.delete("api/admin/users", validate(userDeleteSchema), userApi.remove);
-
+//Пользователь
+app.get("/api/users", userApi.getUserInfo);
 app.post(
-  "/api/user/registration",
+  "/api/users/registration",
   validate(userRegisterSchema),
   userApi.registration
 );
 app.post("/api/users/login", validate(userLoginSchema), userApi.login);
 app.post("/api/users/logout", userApi.logout);
 app.put("/api/users/update", validate(userSchemaToUpdate), userApi.update);
-app.post("/api/users/id/:id/avatar", userApi.uploadAvatar);
+app.post("/api/users/:id/avatar", userApi.uploadAvatar);
 
 // Группы
 app.get("/api/groups", groupApi.getAll);
-app.get("/api/groups/id/:id", groupApi.getById);
+app.get("/api/groups/:id", groupApi.getById);
 app.post("/api/groups", validate(groupSchemaToCreate), groupApi.create);
-app.put("/api/groups/id/:id", validate(groupSchemaToUpdate), groupApi.update);
-app.delete("/api/groups/id/:id", groupApi.remove);
+app.put("/api/groups/:id", validate(groupSchemaToUpdate), groupApi.update);
+app.delete("/api/groups/:id", groupApi.remove);
 
 // Студенты
 app.get("/api/students", studentsApi.getAll);
@@ -123,33 +127,33 @@ app.post(
 );
 app.get("/api/students/groups/:group", studentsApi.getByGroup);
 app.put(
-  "/api/students/:groups/:id",
+  "/api/students/:group/:id",
   validate(studentSchemaToUpdate),
   studentsApi.update
 );
-app.delete("/api/students/id/:id", studentsApi.remove);
+app.delete("/api/students/:id", studentsApi.remove);
 
 // Преподаватели
 app.get("/api/teachers", teacherApi.getAll);
-app.get("/api/teachers/id/:id", teacherApi.getById);
+app.get("/api/teachers/:id", teacherApi.getById);
 app.post("/api/teachers", validate(teacherSchemaToCreate), teacherApi.create);
 app.put(
-  "/api/teachers/id/:id",
+  "/api/teachers/:id",
   validate(teacherSchemaToUpdate),
   teacherApi.update
 );
-app.delete("/api/teachers/id/:id", teacherApi.remove);
+app.delete("/api/teachers/:id", teacherApi.remove);
 
 // Предметы
 app.get("/api/subjects", subjectsApi.getAll);
-app.get("/api/subjects/id/:id", subjectsApi.getById);
-app.post("/api/subjects", validate(subjectSchemaToCreate), subjectsApi.create);
-app.put(
-  "/api/subjects/id/:id",
-  validate(subjectSchemaToUpdate),
-  subjectsApi.update
-);
-app.delete("/api/subjects/id/:id", subjectsApi.remove);
+app.get("/api/subjects/:id", subjectsApi.getById);
+
+// app.put(
+//   "/api/subjects/id/:id",
+//   validate(subjectSchemaToUpdate),
+//   subjectsApi.update
+// );
+// app.delete("/api/subjects/id/:id", subjectsApi.remove);
 
 // Посещаемость
 app.get("/api/attendances", attendanceApi.getAll);
@@ -158,12 +162,12 @@ app.get("/api/attendances/groups/:group", attendanceApi.getByGroup);
 app.get("/api/attendances/students/:student", attendanceApi.getByStudent);
 app.post(
   "/api/attendances",
-  validate(attendanceSchemaToCreate),
+  validate(attendanceArraySchemaToCreate),
   attendanceApi.create
 );
 app.put(
-  "/api/attendances/id/:id",
-  validate(attendanceSchemaToUpdate),
+  "/api/attendances",
+  validate(attendanceArraySchemaToUpdate),
   attendanceApi.update
 );
-app.delete("/api/attendances/id/:id", attendanceApi.remove);
+app.delete("/api/attendances/:id", attendanceApi.remove);

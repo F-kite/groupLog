@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import styles from "./styles.module.scss";
 
-import { communicationWithDeveloper } from "@/store/data";
+import { communicationWithDeveloper } from "@/lib/store/data";
 
 const linkItems = communicationWithDeveloper;
 
