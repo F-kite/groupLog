@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
@@ -27,9 +25,10 @@ type ElementsProps = {
 type ComboboxProps = {
   elements: ElementsProps[];
   currentEl: string | null;
+  onChange?: (value: string) => void; // Функция для обработки изменений
 };
 
-export function Combobox({ elements, currentEl }: ComboboxProps) {
+export function Combobox({ elements, currentEl, onChange }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(currentEl);
 
@@ -61,6 +60,9 @@ export function Combobox({ elements, currentEl }: ComboboxProps) {
                   onSelect={(currentValue) => {
                     setValue(currentValue === value ? "" : currentValue);
                     setOpen(false);
+                    if (onChange) {
+                      onChange(currentValue);
+                    }
                   }}
                 >
                   {element.label}

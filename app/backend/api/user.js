@@ -250,12 +250,16 @@ const logout = async (req, res) => {
 
 // Обновление данных пользователя
 const update = async (req, res) => {
-  const user = supabase.auth.user();
+  const authToken = req.cookies.authToken;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser(authToken);
+  console.log(user);
   if (!user) return;
   const { data } = req.body;
   try {
     const { data: _user, error } = await supabase
-      .from("users")
+      .from("user")
       .update(data)
       .match({ id: user.id })
       .single();
@@ -266,35 +270,100 @@ const update = async (req, res) => {
   }
 };
 
+// Обновление данных пользователя
+const updateRoleAndGroup = async (req, res) => {
+  try {
+    const data = req.body;
+    const verifyData = {};
+
+    if (data.group != "") {
+      const { data: group } = await supabase
+        .from("group")
+        .select("group_id, name")
+        .eq("name", data.group)
+        .single();
+      verifyData.group = group.group_id;
+    } else verifyData.group = null;
+
+    if (data.role != "") {
+      const { data: role } = await supabase
+        .from("user_role")
+        .select("role_id, name")
+        .eq("name", data.role)
+        .single();
+      verifyData.role = role.role_id;
+    } else verifyData.role = null;
+
+    let updatedData = {};
+    updatedData.assigned_group =
+      verifyData.group == null ? null : verifyData.group;
+
+    if (verifyData.role !== null) updatedData.role_id = verifyData.role;
+
+    if (Object.keys(updatedData).length !== 0) {
+      const { data: _user, error } = await supabase
+        .from("users")
+        .update(updatedData)
+        .eq("user_id", data.user_id)
+        .single();
+
+      if (error) throw error;
+      return res.status(200).json({ message: "Обновление применено" });
+    } else return res.status(404).json({ message: "Данные уже актуальны" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Ошибка при обновлении" });
+  }
+};
+
 //Удаление пользователя (из бд)
 const remove = async (req, res) => {
-  const { email } = req.body;
+  const user = req.params;
 
-  //Существует ли пользователь с таким email
-  const { data: userCheck } = await supabase
+  //Существует ли пользователь с таким id
+  const { data: userCheck, error: userCheckError } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email)
+    .eq("user_id", user.id)
     .single();
 
-  if (!userCheck) {
-    return res
-      .status(400)
-      .json({ error: "Invalid email. User with this email not found." });
+  if (!userCheck || userCheckError) {
+    return res.status(400).json({ error: "User not found." });
   }
 
-  const { error } = await supabase.from("users").delete().eq("email", email);
+  const userEmail = userCheck.email;
 
-  if (error) {
-    console.error(error.message);
+  const {
+    data: { users },
+  } = await supabase.auth.admin.listUsers();
+
+  const authUser = users.filter((user) => {
+    if (user.email === userEmail) return user;
+  });
+  let authUserId;
+  if (authUser.length > 0) {
+    authUserId = authUser[0].id;
+  } else throw new Error("User not found");
+
+  const { data: deleteFromDb, error: deleteFromDbError } =
+    await supabase.auth.admin.deleteUser(authUserId);
+  if (deleteFromDbError) {
+    console.error(deleteFromDbError.message);
     return res.status(500).json({ error: "Failed to delete user" });
   }
 
-  await logout();
-  console.debug(
-    `User ${userCheck.user_name} : ${userCheck.user_email} was deleted`
-  );
-  return res.status(204).end();
+  const { error: deleteFromTableUsersError } = await supabase
+    .from("users")
+    .delete()
+    .eq("user_id", user.id);
+
+  if (deleteFromTableUsersError) {
+    console.error(deleteFromTableUsersError.message);
+    return res.status(500).json({ error: "Failed to delete user" });
+  }
+
+  console.debug(`User ${userCheck.name} : ${userCheck.email} was deleted`);
+  return res.status(200).json({ success: true });
 };
 
 // Сохранение аватара пользователя
@@ -349,6 +418,7 @@ const userApi = {
   login,
   logout,
   update,
+  updateRoleAndGroup,
   uploadAvatar,
   remove,
 };

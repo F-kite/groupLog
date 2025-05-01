@@ -9,3 +9,9 @@ export type UserInfoProps = {
   role: string;
   group: string;
 };
+
+export type SentDataOnChangedUserInfoProps = {
+  user_id: number;
+  group?: string;
+  role?: string;
+};

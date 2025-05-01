@@ -90,7 +90,8 @@ put - обновление записи
 //Админка
 app.get("/api/admin/users/:email", userApi.getUserInfo);
 app.get("/api/admin/users", userApi.getAllUsers);
-app.delete("/api/admin/users", validate(userDeleteSchema), userApi.remove);
+app.put("/api/admin/users", userApi.updateRoleAndGroup);
+app.delete("/api/admin/users/:id", userApi.remove);
 
 //Расписание
 app.get("/api/schedule/:group/:week", scheduleApi.getWeeklySchedule);

@@ -7,42 +7,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  SelectGroup,
-} from "@/components/ui/select";
-
-import {
-  Calculator,
-  Calendar,
-  CreditCard,
-  Settings,
-  Smile,
-  User,
-} from "lucide-react";
-
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "@/components/ui/command";
 
 import { Button } from "@/components/ui/button";
 
 import administrationApi from "@/lib/api/administration";
-import { MyContext } from "@/lib/hooks/MyContextProvider";
-import styles from "./styles.module.scss";
-import { Combobox } from "../ui/custom/combobox";
 import groupApi from "@/lib/api/groups";
+import { MyContext } from "@/lib/hooks/MyContextProvider";
+
+import { Combobox } from "@/components/ui/custom/combobox";
+import ScheduleAdditionPanel from "@/components/ScheduleAdditionPanel/ScheduleAdditionPanel";
+import DropDownList from "@/components/DropDownList/DropDownList";
+
+import styles from "./styles.module.scss";
+import { Save, Trash, Pencil } from "lucide-react";
+import { SentDataOnChangedUserInfoProps } from "@/lib/types/user";
 
 type UsersInfoProps = {
   user_id: number;
@@ -71,22 +49,8 @@ const valueRolesOnRus = {
   administrator: "Администратор",
   student: "Студент",
   teacher: "Преподаватель",
+  undefined: "Не выбрано",
 };
-
-const elements = [
-  {
-    value: "ИСт-221",
-    label: "ИСт-221",
-  },
-  {
-    value: "ИСт-222",
-    label: "ИСт-222",
-  },
-  {
-    value: "ИБт-221",
-    label: "ИБт-221",
-  },
-];
 
 export default function AdminPanel() {
   const context = useContext(MyContext);
@@ -95,22 +59,25 @@ export default function AdminPanel() {
     throw new Error("MyContext must be used within a MyProvider");
   }
   const { userInfo } = context;
+
   const [usersInfo, setUsersInfo] = useState<UsersInfoProps[]>([]);
   const [editableRowId, setEditableRowId] = useState<number | null>(null);
-  const [groupsList, setGroupsList] = useState<GroupListProps[]>();
-  const [val, setVal] = useState<number>(0);
+  const [groupsList, setGroupsList] = useState<GroupListProps[]>([]);
+
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
 
   useEffect(() => {
     const fetchAllUsersInfo = async () => {
       try {
-        const response = await administrationApi.FetchAllUsers();
+        const response = await administrationApi.fetchAllUsers();
         const data: UsersInfoProps[] = [];
         console.log(response);
         if (Array.isArray(response)) {
           response.map((el) => {
             data.push({
               user_id: el.user_id,
-              role: el.user_role.name,
+              role: el.user_role?.name,
               group: el.group?.name,
               name: el.name,
               email: el.email,
@@ -134,7 +101,7 @@ export default function AdminPanel() {
       try {
         const response = await groupApi.getAllGroups();
         // console.log(response);
-        const data: GroupListProps[] = [];
+        const data: GroupListProps[] = [{ value: "", label: "Без группы" }];
         if (Array.isArray(response)) {
           response.map((el) => {
             data.push({
@@ -154,103 +121,65 @@ export default function AdminPanel() {
     fetchAllGroups();
   }, [setGroupsList]);
 
-  function DropDownList({ currentEl }: { currentEl: string }) {
-    return (
-      <Select>
-        <SelectTrigger className="w-[160px] bg-auth text-auth-foreground shadow hover:bg-auth/90">
-          <SelectValue placeholder={`${currentEl}`} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectItem value="administrator">Администратор</SelectItem>
-            <SelectItem value="teacher">Преподаватель</SelectItem>
-            <SelectItem value="student">Студент</SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-    );
-  }
-
-  const setNumber = (target: number) => {
-    const value: number = target < 0 ? 1 : target > 20 ? 20 : target;
-    setVal(value);
+  const handleGroupChange = (value: string) => {
+    setSelectedGroup(value);
   };
 
-  function ScheduleAdditionPanel() {
-    return (
-      <div className={styles.additionPanel}>
-        Расписание для группы{" "}
-        <Combobox
-          elements={groupsList ? groupsList : []}
-          currentEl={userInfo.group}
-        />{" "}
-        на
-        <span>
-          <input
-            type="number"
-            onChange={(event) => setNumber(Number(event.target.value))}
-            value={val}
-            min={1}
-            max={20}
-            className={styles.input}
-          />{" "}
-          - ю
-        </span>
-        неделю
-        <Button variant={"auth"} className={styles.button}>
-          Добавить
-        </Button>
-      </div>
-    );
-  }
+  const handleRoleChange = (value: string) => {
+    setSelectedRole(value);
+  };
 
-  function CommandDemo() {
-    return (
-      <Command className={styles.command}>
-        <CommandInput placeholder="Type a command or search..." />
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading="Suggestions">
-            <CommandItem>
-              <Calendar />
-              <span>Calendar</span>
-            </CommandItem>
-            <CommandItem>
-              <Smile />
-              <span>Search Emoji</span>
-            </CommandItem>
-            <CommandItem disabled>
-              <Calculator />
-              <span>Calculator</span>
-            </CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="Settings">
-            <CommandItem>
-              <User />
-              <span>Profile</span>
-              <CommandShortcut>⌘P</CommandShortcut>
-            </CommandItem>
-            <CommandItem>
-              <CreditCard />
-              <span>Billing</span>
-              <CommandShortcut>⌘B</CommandShortcut>
-            </CommandItem>
-            <CommandItem>
-              <Settings />
-              <span>Settings</span>
-              <CommandShortcut>⌘S</CommandShortcut>
-            </CommandItem>
-          </CommandGroup>
-        </CommandList>
-      </Command>
-    );
-  }
+  const handleSaveChanged = async () => {
+    try {
+      const userIndex = usersInfo.findIndex(
+        (el) => el.user_id == editableRowId
+      );
+      const currentUserInfo = usersInfo[userIndex];
+      const sentData: SentDataOnChangedUserInfoProps = {
+        user_id: editableRowId as number,
+      };
+      if (selectedRole || selectedRole != currentUserInfo.role) {
+        sentData.role = selectedRole;
+      }
+
+      if (selectedGroup != currentUserInfo.group) {
+        sentData.group = selectedGroup;
+      }
+
+      if (!sentData.role && !sentData.group) {
+        throw new Error("Нет данных для отправки");
+      } else {
+        const response = await administrationApi.changedGroupOrRoleUser(
+          sentData
+        );
+        console.log(response);
+      }
+    } catch (error) {
+      alert(error);
+    }
+  };
+
+  const handleDeleteUser = async (editableRowId: any) => {
+    try {
+      const response = await administrationApi.removeUser(
+        editableRowId as number
+      );
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      console.log("Пользователь удален");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (usersInfo.length > 0)
     return (
       <div className={styles.container}>
-        <ScheduleAdditionPanel />
+        <ScheduleAdditionPanel
+          groupsList={groupsList.slice(1)}
+          userInfoGroup={userInfo.group}
+        />
         <div className={styles.tableContainer}>
           <Table className={styles.table}>
             <TableHeader>
@@ -277,10 +206,12 @@ export default function AdminPanel() {
                             <Combobox
                               elements={groupsList ? groupsList : []}
                               currentEl={info[key]}
+                              onChange={handleGroupChange}
                             />
                           ) : key == "role" ? (
                             <DropDownList
                               currentEl={valueRolesOnRus[info[key] as RoleKeys]}
+                              onChange={handleRoleChange}
                             />
                           ) : (
                             value
@@ -307,15 +238,26 @@ export default function AdminPanel() {
                         else setEditableRowId(info.user_id);
                       }}
                     >
-                      Изменить
+                      <Pencil />
                     </Button>
                     {editableRowId === info.user_id ? (
-                      <Button variant={"auth"} className={styles.button}>
-                        Сохранить
+                      <Button
+                        variant={"auth"}
+                        className={styles.button}
+                        onClick={async () => await handleSaveChanged()}
+                      >
+                        <Save />
                       </Button>
                     ) : (
-                      <Button variant={"auth"} className={styles.button}>
-                        Удалить
+                      <Button
+                        variant={"auth"}
+                        className={styles.button}
+                        onClick={() => {
+                          if (editableRowId !== info.user_id)
+                            handleDeleteUser(info.user_id);
+                        }}
+                      >
+                        <Trash />
                       </Button>
                     )}
                   </TableCell>

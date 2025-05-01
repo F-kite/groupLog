@@ -8,7 +8,7 @@ import { MyContext } from "@/lib/hooks/MyContextProvider";
 import studentApi from "@/lib/api/students";
 import scheduleApi from "@/lib/api/schedule";
 import attendanceApi from "@/lib/api/attendance";
-import AdminPanel from "@/components/AdminPanel/AdminPanel";
+import AdminPanel from "@/pages/AdminPanel/AdminPanel";
 import userApi from "@/lib/api/users";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
