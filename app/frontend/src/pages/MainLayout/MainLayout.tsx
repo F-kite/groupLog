@@ -110,14 +110,6 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     }
   }, [userInfo.group, currentInfo.currentDate, setAttendanceLog]);
 
-  console.log({
-    userInfo,
-    currentInfo,
-    students,
-    weekSchedule,
-    attendanceLog,
-  });
-
   return (
     <div className={styles.layout}>
       <header>

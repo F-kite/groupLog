@@ -117,9 +117,9 @@ export default function LoginForm({
               <Button type="submit" variant="auth" size="lg" className="w-full">
                 Войти
               </Button>
-              <Button variant="outline" size="lg" className="w-full">
+              {/* <Button variant="outline" size="lg" className="w-full">
                 Войти с помошью Google аккаунта
-              </Button>
+              </Button> */}
             </div>
             <div className="mt-4 text-center text-sm">
               Нет аккаунта?{" "}

@@ -150,9 +150,9 @@ export function RegisterForm({
               >
                 Зарегистрироваться
               </Button>
-              <Button variant="outline" size="lg" className="w-full">
+              {/* <Button variant="outline" size="lg" className="w-full">
                 Войти с помошью Google аккаунта
-              </Button>
+              </Button> */}
             </div>
             <div className="mt-4 text-center text-sm">
               Есть аккаунт?{" "}

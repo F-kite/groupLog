@@ -51,16 +51,6 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS
-// app.use(function (req, res, next) {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept"
-//   );
-//   next();
-// });
-
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -82,12 +72,7 @@ app.get("/dashboard", authMiddleware, (req, res) => {
 
 app.post("/api/refresh-token", dbApi.refreshAuthToken);
 
-/*
-post - создание со статусом 201 после успешного выполнения
-put - обновление записи
-*/
-
-//Админка
+//Админстратор
 app.get("/api/admin/users/:email", userApi.getUserInfo);
 app.get("/api/admin/users", userApi.getAllUsers);
 app.put("/api/admin/users", userApi.updateRoleAndGroup);
